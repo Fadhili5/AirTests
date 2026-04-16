@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  font-family: var(--font-body), sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(110, 231, 183, 0.35), transparent 32%),
+    linear-gradient(180deg, #f5efe1 0%, #f8f4eb 100%);
+}
+
+body {
+  min-height: 100vh;
+  color: #0f172a;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display), sans-serif;
+}
+
+input,
+select,
+button,
+textarea {
+  font: inherit;
+}
+
+.field {
+  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-lagoon focus:ring-2 focus:ring-lagoon/15;
+}
+
+.button-primary {
+  @apply inline-flex w-full items-center justify-center rounded-2xl bg-lagoon px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.button-secondary {
+  @apply inline-flex w-full items-center justify-center rounded-2xl border border-lagoon/20 bg-white px-4 py-3 text-sm font-semibold text-lagoon transition hover:border-lagoon/40 hover:bg-lagoon/5;
+}
+

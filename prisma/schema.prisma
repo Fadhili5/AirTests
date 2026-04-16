@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmploymentStatus {
+  EMPLOYED
+  SELF_EMPLOYED
+  UNEMPLOYED
+  STUDENT
+  CONTRACT
+}
+
+enum VerificationStatus {
+  PENDING
+  KYC_SUBMITTED
+  VERIFIED
+  REJECTED
+  MANUAL_REVIEW
+}
+
+enum WalletStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum LoanStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  MANUAL_REVIEW
+  DISBURSEMENT_PENDING
+  DISBURSED
+  REPAID
+  OVERDUE
+}
+
+enum TransactionType {
+  VERIFICATION_HOLD
+  VERIFICATION_RELEASE
+  LOAN_DISBURSEMENT
+  REPAYMENT
+  WALLET_WITHDRAWAL
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+  MANUAL_REVIEW
+}
+
+enum ReviewStatus {
+  PENDING
+  PASSED
+  FAILED
+  MANUAL_REVIEW
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPPORT
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  telegramId         String              @unique
+  username           String?
+  fullName           String?
+  nationalId         String?             @unique
+  phoneNumber        String?             @unique
+  mpesaNumber        String?
+  dateOfBirth        DateTime?
+  employmentStatus   EmploymentStatus?
+  monthlyIncome      Decimal?            @db.Decimal(12, 2)
+  riskScore          Int                 @default(0)
+  verificationStatus VerificationStatus  @default(PENDING)
+  role               UserRole            @default(CUSTOMER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  applications       LoanApplication[]
+  wallet             Wallet?
+  transactions       Transaction[]
+  riskAssessments    RiskAssessment[]
+  sessions           Session[]
+}
+
+model LoanApplication {
+  id              String      @id @default(cuid())
+  userId          String
+  requestedAmount Decimal     @db.Decimal(12, 2)
+  approvedAmount  Decimal?    @db.Decimal(12, 2)
+  interestRate    Decimal?    @db.Decimal(5, 2)
+  durationDays    Int
+  dueDate         DateTime?
+  repaymentTotal  Decimal?    @db.Decimal(12, 2)
+  status          LoanStatus  @default(DRAFT)
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  disbursedAt     DateTime?
+  repaidAt        DateTime?
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+
+  @@index([userId, status])
+}
+
+model Wallet {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  balance          Decimal      @default(0) @db.Decimal(12, 2)
+  heldAmount       Decimal      @default(0) @db.Decimal(12, 2)
+  refundableAmount Decimal      @default(0) @db.Decimal(12, 2)
+  status           WalletStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  userId            String
+  loanApplicationId String?
+  type              TransactionType
+  amount            Decimal           @db.Decimal(12, 2)
+  reference         String            @unique
+  providerReference String?
+  status            TransactionStatus @default(PENDING)
+  narrative         String?
+  metadata          Json?
+  idempotencyKey    String?           @unique
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loanApplication   LoanApplication?  @relation(fields: [loanApplicationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, type, status])
+}
+
+model RiskAssessment {
+  id            String       @id @default(cuid())
+  userId        String
+  duplicateCheck Boolean
+  fraudFlag     Boolean
+  score         Int
+  reviewStatus  ReviewStatus
+  notes         Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewStatus])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenId   String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

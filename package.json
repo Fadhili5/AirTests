@@ -1,0 +1,28 @@
+{
+  "name": "telegram-kenya-lending-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api,bot -c blue,green,yellow \"npm run dev --workspace @lending/web\" \"npm run dev --workspace @lending/api\" \"npm run dev --workspace @lending/bot\"",
+    "build": "npm run build --workspace @lending/shared && npm run build --workspace @lending/api && npm run build --workspace @lending/bot && npm run build --workspace @lending/web",
+    "start:railway": "node scripts/start-service.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "dotenv": "^16.4.5",
+    "prisma": "^5.20.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "typescript": "^5.5.4"
+  }
+}
+
