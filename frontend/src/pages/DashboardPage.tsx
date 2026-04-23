@@ -17,21 +17,29 @@ export default function DashboardPage() {
     }
   }, [alerts, tasks, ulds]);
 
-  let highRiskUlds: typeof ulds;
-  let openTasks: typeof tasks;
-  try {
-    highRiskUlds = ulds.filter((u) => u.risk === "HIGH");
-    openTasks = tasks.filter((t) => t.status !== "Completed");
-  } catch (err) {
-    console.error("[Dashboard] Filter error:", err);
-    highRiskUlds = [];
-    openTasks = [];
-  }
+  const highRiskUlds = useMemo(() => {
+    try { return ulds.filter((u) => u.risk === "HIGH"); } catch { return []; }
+  }, [ulds]);
+
+  const openTasks = useMemo(() => {
+    try { return tasks.filter((t) => t.status !== "Completed"); } catch { return []; }
+  }, [tasks]);
+
+  const riskCounts = useMemo(() => {
+    try {
+      return {
+        high: ulds.filter((u) => u.risk === "HIGH").length,
+        medium: ulds.filter((u) => u.risk === "MEDIUM").length,
+        low: ulds.filter((u) => u.risk === "LOW").length,
+        total: ulds.length,
+      };
+    } catch { return { high: 0, medium: 0, low: 0, total: 0 }; }
+  }, [ulds]);
 
   return (
-    <div className="space-y-4">
-      {/* KPI Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="space-y-3 md:space-y-4">
+      {/* KPI Overview - tablet-first responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map((item) => (
           <Card key={item.label}>
             <CardContent className="p-3">
@@ -69,31 +77,25 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Risk Map Preview */}
+          {/* Risk Map Preview — high-level only, no operational detail */}
           <Card>
             <CardHeader>
               <div>
-                <CardTitle>Risk Overview Map</CardTitle>
-                <CardDescription>Global ULD positions and risk zone preview.</CardDescription>
+                <CardTitle>Risk Overview</CardTitle>
+                <CardDescription>Fleet risk posture by category — drill down on ULD Tracking.</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {ulds.slice(0, 6).map((uld) => (
-                  <div key={uld.id} className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold">{uld.id}</span>
-                      <RiskBadge risk={uld.risk} />
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">{uld.airport} • {uld.zone}</p>
-                    <p className="text-xs text-slate-500 mt-1">{uld.phase} • {uld.currentTemp.toFixed(1)}°C</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <RiskSummaryTile label="High Risk" count={riskCounts.high} tone="danger" />
+                <RiskSummaryTile label="Medium Risk" count={riskCounts.medium} tone="warn" />
+                <RiskSummaryTile label="Low Risk" count={riskCounts.low} tone="good" />
+                <RiskSummaryTile label="Fleet Total" count={riskCounts.total} tone="default" />
               </div>
             </CardContent>
           </Card>
 
-          {/* Quick Access Cards */}
+          {/* Quick Access Cards - tablet-first responsive */}
           <Card>
             <CardHeader>
               <div>
@@ -101,35 +103,27 @@ export default function DashboardPage() {
                 <CardDescription>Jump directly into active operational domains.</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <QuickLink
-                to="/alerts"
-                title="Investigate Alerts"
-                description="Severity triage and acknowledgement"
-                count={alerts.filter((a) => a.level === "HIGH").length}
-                countTone="danger"
-              />
-              <QuickLink
-                to="/interventions"
-                title="Execute Interventions"
-                description="Assignments, SLA windows, action history"
-                count={openTasks.length}
-                countTone="warn"
-              />
-              <QuickLink
-                to="/uld-tracking"
-                title="Track ULDs"
-                description="Live map and movement view"
-                count={ulds.length}
-                countTone="good"
-              />
-              <QuickLink
-                to="/airports"
-                title="Review Airports"
-                description="Zone risk and delay intelligence"
-                count={new Set(ulds.map((u) => u.airport)).size}
-                countTone="default"
-              />
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {[
+                  { path: "/uld-tracking", label: "ULD Tracking", icon: "📍" },
+                  { path: "/exposure-analysis", label: "Exposure Analysis", icon: "🌡️" },
+                  { path: "/alerts", label: "Alerts", icon: "🔔" },
+                  { path: "/interventions", label: "Interventions", icon: "📋" },
+                  { path: "/airports", label: "Airports", icon: "✈️" },
+                  { path: "/analytics", label: "Analytics", icon: "📊" },
+                  { path: "/settings", label: "Settings", icon: "⚙️" },
+                ].map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="rounded-lg border border-white/5 bg-white/[0.03] p-3 text-center hover:bg-white/[0.06] transition-colors"
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <p className="text-xs text-slate-300 mt-1">{item.label}</p>
+                  </Link>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -192,6 +186,23 @@ function StatusDot({ tone }: { tone: string }) {
       tone === "danger" && "bg-rose-400",
       tone === "default" && "bg-slate-400"
     )} />
+  );
+}
+
+function RiskSummaryTile({ label, count, tone }: { label: string; count: number; tone: string }) {
+  return (
+    <div className="rounded-lg border border-white/5 bg-white/[0.03] p-3 text-center">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={cn(
+        "text-2xl font-semibold mt-1",
+        tone === "danger" && "text-rose-400",
+        tone === "warn" && "text-amber-400",
+        tone === "good" && "text-emerald-400",
+        tone === "default" && "text-slate-300"
+      )}>
+        {count}
+      </p>
+    </div>
   );
 }
 

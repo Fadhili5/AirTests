@@ -52,9 +52,9 @@ export default function InterventionsPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">
-      <div className="space-y-4">
-        {/* Summary */}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+      <div className="space-y-3 md:space-y-4">
+        {/* Summary - tablet-first responsive */}
         <Card>
           <CardHeader>
             <div>
@@ -118,7 +118,7 @@ export default function InterventionsPage() {
         </Card>
       </div>
 
-      {/* Action History */}
+      {/* Action History - tablet-first responsive */}
       <Card className="h-full">
         <CardHeader>
           <div>

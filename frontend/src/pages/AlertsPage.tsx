@@ -5,7 +5,7 @@ import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 
 export default function AlertsPage() {
-  const { alerts, timeline } = useAeroStore();
+  const { alerts, timeline, flashes } = useAeroStore();
   const [severityFilter, setSeverityFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
   const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
 
@@ -25,106 +25,92 @@ export default function AlertsPage() {
     }
   };
 
-  let grouped: { critical: typeof alerts; watch: typeof alerts; info: typeof alerts };
-  try {
-    grouped = {
-      critical: alerts.filter((a) => a.level === "HIGH"),
-      watch: alerts.filter((a) => a.level === "MEDIUM"),
-      info: alerts.filter((a) => a.level === "LOW"),
-    };
-  } catch (err) {
-    console.error("[Alerts] Grouping error:", err);
-    grouped = { critical: [], watch: [], info: [] };
-  }
-
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">
-      <div className="space-y-4">
-        {/* Severity Filters */}
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle>Severity Filters</CardTitle>
-              <CardDescription>Operational severity segmentation for risk-event review.</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <FilterBadge label="All" count={alerts.length} active={severityFilter === "ALL"} onClick={() => setSeverityFilter("ALL")} />
-              <FilterBadge label="Critical" count={grouped.critical.length} active={severityFilter === "HIGH"} onClick={() => setSeverityFilter("HIGH")} tone="danger" />
-              <FilterBadge label="Watch" count={grouped.watch.length} active={severityFilter === "MEDIUM"} onClick={() => setSeverityFilter("MEDIUM")} tone="warn" />
-              <FilterBadge label="Info" count={grouped.info.length} active={severityFilter === "LOW"} onClick={() => setSeverityFilter("LOW")} tone="good" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Alert Feed */}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+      <div className="space-y-3 md:space-y-4">
+        {/* Filters - tablet-first responsive */}
         <Card>
           <CardHeader>
             <div>
               <CardTitle>Alert Feed</CardTitle>
-              <CardDescription>Realtime system alerts and risk events.</CardDescription>
+              <CardDescription>Real-time system alerts with severity filtering and acknowledgment.</CardDescription>
             </div>
-            <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-400">
-              {filtered.length} shown
-            </span>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {filtered.map((alert) => {
-              const isAck = acknowledged.has(alert.id);
-              return (
-                <div
-                  key={alert.id}
+          <CardContent>
+            <div className="flex gap-2 flex-wrap">
+              {["ALL", "HIGH", "MEDIUM", "LOW"].map((level) => (
+                <button
+                  key={level}
+                  onClick={() => setSeverityFilter(level as any)}
                   className={cn(
-                    "rounded-lg border p-3 transition-opacity",
-                    isAck ? "border-white/5 bg-white/[0.02] opacity-50" : "border-white/5 bg-white/[0.03]"
+                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                    severityFilter === level
+                      ? "bg-cyan-400/15 text-cyan-200 border border-cyan-400/20"
+                      : "text-slate-400 hover:bg-white/5 border border-transparent"
                   )}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold">{alert.uldId}</span>
-                    <div className="flex items-center gap-2">
-                      <RiskBadge risk={alert.level} />
-                      {!isAck && (
-                        <button
-                          onClick={() => handleAcknowledge(alert.id)}
-                          className="text-[10px] px-2 py-1 rounded-full bg-cyan-400/15 text-cyan-300 hover:bg-cyan-400/25 transition-colors"
-                        >
-                          Ack
-                        </button>
-                      )}
-                    </div>
+                  {level}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Alerts List */}
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>Active Alerts</CardTitle>
+              <CardDescription>Severity-sorted alert stream with acknowledgment controls.</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {filtered.map((alert) => (
+              <div
+                key={alert.id}
+                className={cn(
+                  "rounded-lg border p-3 transition-all",
+                  flashes[`alert:${alert.id}`] ? "ring-1 ring-cyan-400/30 border-cyan-400/20" : "border-white/5 bg-white/[0.03]"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{alert.title}</p>
+                    <p className="text-xs text-slate-500">{new Date(alert.timestamp).toLocaleTimeString()}</p>
                   </div>
-                  <p className="text-sm text-slate-300 mt-1">{alert.title}</p>
-                  <p className="text-xs text-slate-500 mt-1">{alert.detail}</p>
-                  <p className="text-[11px] text-slate-600 mt-2">{new Date(alert.timestamp).toLocaleString()}</p>
+                  <SeverityBadge level={alert.level} />
                 </div>
-              );
-            })}
-            {filtered.length === 0 && (
-              <p className="text-sm text-slate-500 text-center py-8">No alerts match the current filter.</p>
-            )}
+                <p className="text-xs text-slate-400 mt-1">{alert.detail}</p>
+                {!acknowledged.has(alert.id) && (
+                  <button
+                    onClick={() => handleAcknowledge(alert.id)}
+                    className="mt-2 w-full rounded-lg bg-cyan-400/15 text-cyan-300 border border-cyan-400/20 py-1.5 text-xs hover:bg-cyan-400/25 transition-colors"
+                  >
+                    Acknowledge
+                  </button>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Acknowledgement Timeline */}
+      {/* Acknowledgment Timeline - tablet-first responsive */}
       <Card className="h-full">
         <CardHeader>
           <div>
-            <CardTitle>Acknowledgement Flow</CardTitle>
+            <CardTitle>Acknowledgment Timeline</CardTitle>
             <CardDescription>Event chain and recovery verification.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          {timeline.slice(0, 12).map((item) => (
+          {timeline.map((item) => (
             <div key={item.id} className="flex gap-3">
               <span className={cn(
                 "mt-1 h-2 w-2 shrink-0 rounded-full",
                 item.type === "Alert" && "bg-rose-400",
-                item.type === "Verified" && "bg-emerald-400",
-                item.type === "Executed" && "bg-cyan-400",
-                item.type === "Assigned" && "bg-amber-400",
-                item.type === "Acknowledged" && "bg-blue-400"
+                item.type === "Acknowledged" && "bg-cyan-400",
+                item.type === "Assigned" && "bg-amber-400"
               )} />
               <div>
                 <div className="flex items-center gap-2">
@@ -161,6 +147,19 @@ function FilterBadge({ label, count, active, onClick, tone }: { label: string; c
       )} />
       {label} <span className="text-slate-500">({count})</span>
     </button>
+  );
+}
+
+function SeverityBadge({ level }: { level: string }) {
+  return (
+    <span className={cn(
+      "text-[10px] font-medium px-2 py-0.5 rounded-full",
+      level === "HIGH" && "bg-rose-400/15 text-rose-300",
+      level === "MEDIUM" && "bg-amber-400/15 text-amber-300",
+      level === "LOW" && "bg-emerald-400/15 text-emerald-300"
+    )}>
+      {level}
+    </span>
   );
 }
 

@@ -14,7 +14,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,216,208,0.08),transparent_20%),linear-gradient(180deg,#081321_0%,#09182b_100%)] text-slate-50">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        {/* Desktop Sidebar */}
+        {/* Desktop/Tablet Sidebar */}
         <Sidebar
           collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
@@ -24,7 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           onSyncClick={toggleSyncDrawer}
         />
 
-        {/* Main Content Area */}
+        {/* Main Content Area - tablet-first responsive */}
         <div className="flex flex-1 flex-col min-w-0">
           <Header
             currentPath={location.pathname}
@@ -33,7 +33,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             queueLength={queue.length}
           />
 
-          <main className="flex-1 overflow-auto p-4">
+          <main className="flex-1 overflow-auto p-3 md:p-4 lg:p-6">
             {children}
           </main>
 

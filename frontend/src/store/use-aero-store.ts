@@ -43,15 +43,36 @@ interface AeroState {
   addAssistantPrompt: (prompt: string) => void;
   mergeControlCenter: (payload: Partial<Pick<AeroState, "ulds" | "tasks" | "alerts" | "timeline">>) => void;
   pulse: (keys: string[]) => void;
+  attemptSyncRecovery: () => void;
 }
 
 const flashTimers = new Map<string, number>();
+
+const QUEUE_STORAGE_KEY = "aerosentinel:queue";
+const SYNC_STORAGE_KEY = "aerosentinel:lastSync";
+
+function loadQueueFromStorage(): QueueItem[] {
+  try {
+    const stored = localStorage.getItem(QUEUE_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveQueueToStorage(queue: QueueItem[]) {
+  try {
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+  } catch {
+    console.warn("[Store] Failed to persist queue to localStorage");
+  }
+}
 
 export const useAeroStore = create<AeroState>((set, get) => ({
   activeTab: "dashboard",
   syncStatus: navigator.onLine ? "online" : "offline",
   syncDrawerOpen: false,
-  queue: [],
+  queue: loadQueueFromStorage(),
   flashes: {},
   selectedUldId: "ULD-7782",
   filters: {
@@ -342,16 +363,31 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       label,
       createdAt: new Date().toISOString(),
     };
-    set((state) => ({
-      queue: [item, ...state.queue],
-    }));
+    set((state) => {
+      const newQueue = [item, ...state.queue];
+      saveQueueToStorage(newQueue);
+      return { queue: newQueue };
+    });
   },
   flushQueue: () => {
-    if (get().queue.length === 0) return;
+    const currentQueue = get().queue;
+    if (currentQueue.length === 0) return;
     set({ syncStatus: "syncing" });
     window.setTimeout(() => {
+      saveQueueToStorage([]);
       set({ queue: [], syncStatus: navigator.onLine ? "online" : "offline" });
+      try {
+        localStorage.setItem(SYNC_STORAGE_KEY, new Date().toISOString());
+      } catch {
+        console.warn("[Store] Failed to persist last sync timestamp");
+      }
     }, 1200);
+  },
+  attemptSyncRecovery: () => {
+    const state = get();
+    if (!navigator.onLine || state.queue.length === 0) return;
+    if (state.syncStatus === "syncing") return;
+    state.flushQueue();
   },
   markTaskCompleted: (taskId) => {
     set((state) => ({

@@ -31,7 +31,8 @@ export function Sidebar({
     <aside
       className={cn(
         "hidden md:flex flex-col border-r border-white/10 bg-[#060f1c] transition-all duration-300",
-        collapsed ? "w-[72px]" : "w-[260px]"
+        collapsed ? "w-[72px]" : "w-[260px]",
+        "lg:w-[280px]"
       )}
     >
       {/* Brand */}

@@ -34,74 +34,66 @@ export default function AirportsPage() {
     }
   }, [ulds]);
 
-  const center: [number, number] = airportSummary[0] ? [airportSummary[0].lat, airportSummary[0].lon] : [25.2532, 55.3657];
+  const airports = airportSummary.map((ap) => ({
+    code: ap.airport,
+    avgRiskScore: ap.avgRisk,
+    uldCount: ap.activeUlds,
+    delayHotspot: ap.delayHotspots > 0,
+    lat: ap.lat,
+    lon: ap.lon,
+  }));
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">
-      {/* Map */}
-      <Card className="flex flex-col min-h-[400px]">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+      {/* Map - tablet-first responsive */}
+      <Card className="min-h-[350px] md:min-h-[400px]">
         <CardHeader>
           <div>
             <CardTitle>Airport Risk Zones</CardTitle>
-            <CardDescription>Delay probability mapping and operational bottleneck visualization.</CardDescription>
+            <CardDescription>Geographic risk visualization and delay hotspots.</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 min-h-[300px]">
-          <MapContainer
-            center={center as [number, number]}
-            zoom={3}
-            scrollWheelZoom={false}
-            className="h-full w-full rounded-lg"
-          >
+        <CardContent className="min-h-[280px] md:min-h-[320px]">
+          <div className="h-full w-full rounded-lg overflow-hidden">
+            <MapContainer
+              center={[25, 10]}
+              zoom={2}
+              scrollWheelZoom={false}
+              style={{ height: "100%", width: "100%" }}
+            >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {airportSummary.map((ap) => (
+            {airports.map((airport) => (
               <CircleMarker
-                key={ap.airport}
-                center={[ap.lat, ap.lon]}
-                radius={12 + ap.activeUlds * 3}
+                key={airport.code}
+                center={[airport.lat, airport.lon]}
+                radius={14 + (airport.avgRiskScore * 18)}
                 pathOptions={{
-                  color: ap.avgRisk >= 0.75 ? "#ef5d5d" : ap.avgRisk >= 0.5 ? "#f5b84f" : "#39c575",
-                  fillColor: ap.avgRisk >= 0.75 ? "#ef5d5d" : ap.avgRisk >= 0.5 ? "#f5b84f" : "#39c575",
+                  color: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
+                  fillColor: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
                   fillOpacity: 0.6,
                 }}
               >
                 <Popup>
-                  <strong>{ap.airport}</strong><br />
-                  Avg Risk: {ap.avgRisk.toFixed(2)}<br />
-                  Active ULDs: {ap.activeUlds}<br />
-                  Delays: {ap.delayHotspots}
+                  <strong>{airport.code}</strong><br />
+                  Avg Risk: {(airport.avgRiskScore * 100).toFixed(0)}%<br />
+                  ULDs: {airport.uldCount}
                 </Popup>
               </CircleMarker>
             ))}
-            {/* Risk zone circles */}
-            {airportSummary.map((ap) => (
-              <Circle
-                key={`zone-${ap.airport}`}
-                center={[ap.lat, ap.lon]}
-                radius={150000}
-                pathOptions={{
-                  color: ap.avgRisk >= 0.75 ? "#ef5d5d" : ap.avgRisk >= 0.5 ? "#f5b84f" : "#39c575",
-                  fillColor: ap.avgRisk >= 0.75 ? "#ef5d5d" : ap.avgRisk >= 0.5 ? "#f5b84f" : "#39c575",
-                  fillOpacity: 0.08,
-                  weight: 1,
-                }}
-              >
-                <Tooltip sticky>{ap.airport} Risk Zone</Tooltip>
-              </Circle>
-            ))}
           </MapContainer>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Airport Intelligence */}
+      {/* Airport List - tablet-first responsive */}
       <Card className="h-full">
         <CardHeader>
           <div>
-            <CardTitle>Airport Delay Intelligence</CardTitle>
-            <CardDescription>Delay hotspots and operational bottleneck indicators.</CardDescription>
+            <CardTitle>Airport Summary</CardTitle>
+            <CardDescription>Per-airport risk metrics and delay intelligence.</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-2">

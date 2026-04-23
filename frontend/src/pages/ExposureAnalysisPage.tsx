@@ -55,106 +55,63 @@ export default function ExposureAnalysisPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr] gap-4">
-      {/* ULD Selector */}
-      <Card className="flex flex-col">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+      {/* Chart - tablet-first responsive */}
+      <Card className="min-h-[320px] md:min-h-[360px]">
         <CardHeader>
           <div>
-            <CardTitle>Exposure Subjects</CardTitle>
-            <CardDescription>Choose a ULD for phase-by-phase analysis.</CardDescription>
+            <CardTitle>Exposure Analysis</CardTitle>
+            <CardDescription>Temperature exposure breakdown by phase and time.</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-auto space-y-2">
-          {ulds.map((uld) => (
-            <button
-              key={uld.id}
-              onClick={() => {
-                try {
-                  setSelectedUldId(uld.id);
-                } catch (err) {
-                  console.error("[ExposureAnalysis] Selection error:", err);
-                }
-              }}
-              className={cn(
-                "w-full text-left rounded-lg border p-3 transition-all",
-                selectedUldId === uld.id
-                  ? "border-cyan-400/30 bg-cyan-400/10"
-                  : "border-white/5 bg-white/[0.03] hover:bg-white/[0.05]",
-                flashes[`uld:${uld.id}`] && "ring-1 ring-cyan-400/30"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">{uld.id}</span>
-                <RiskBadge risk={uld.risk} />
-              </div>
-              <div className="text-[11px] text-slate-400 mt-1">
-                Score: {uld.exposureScore}/100 • {uld.totalExposure} min
-              </div>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Analysis Content */}
-      <div className="space-y-4">
-        {/* Exposure Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <div>
-                <CardTitle>Exposure Breakdown</CardTitle>
-                <CardDescription>Tarmac vs ground vs flight accumulation.</CardDescription>
-              </div>
-              <span className="text-sm font-medium text-slate-300">{selected?.exposureScore}/100</span>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {selected && (
-                <>
-                  <ProgressBar label="Tarmac" value={selected.tarmacExposure} max={selected.totalExposure} color="#ef5d5d" />
-                  <ProgressBar label="Ground Delay" value={selected.groundDelayExposure} max={selected.totalExposure} color="#f5b84f" />
-                  <ProgressBar label="Flight" value={selected.inflightExposure} max={selected.totalExposure} color="#39c575" />
-                </>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div>
-                <CardTitle>Exposure Insight</CardTitle>
-                <CardDescription>Temperature, prediction, and cause context.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {selected && (
-                <>
-                  <InfoRow label="Current Temperature" value={`${selected.currentTemp.toFixed(1)}°C`} />
-                  <InfoRow label="Prediction" value={`Threshold breach in ${selected.predictionMinutes} min`} />
-                  <InfoRow label="Cause" value={selected.cause} />
-                  <InfoRow label="Delay Source" value={selected.delaySource} />
-                  <InfoRow label="Failure Point" value={selected.failurePoint} />
-                  <InfoRow label="Recommended Fix" value={selected.recommendedFix} />
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Chart */}
-        <Card className="min-h-[300px]">
-          <CardHeader>
-            <div>
-              <CardTitle>Exposure Timeline</CardTitle>
-              <CardDescription>Time-based temperature and exposure breakdown.</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="min-h-[260px]">
+        <CardContent className="min-h-[240px] md:min-h-[280px]">
+          <div className="h-full w-full">
             {chartData && (
               <Line data={chartData} options={chartOptions} />
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Insights - tablet-first responsive */}
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Exposure Insights</CardTitle>
+            <CardDescription>Per-ULD exposure breakdown and trend analysis.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {ulds.map((uld) => (
+            <div key={uld.id} className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between">
+                <strong className="text-sm">{uld.id}</strong>
+                <span className="text-sm text-slate-300">{uld.exposureScore}/100</span>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn(
+                  "text-[10px] font-medium px-2 py-0.5 rounded-full",
+                  uld.trend === "Rising" && "bg-rose-400/15 text-rose-300",
+                  uld.trend === "Stable" && "bg-amber-400/15 text-amber-300",
+                  uld.trend === "Recovering" && "bg-emerald-400/15 text-emerald-300"
+                )}>
+                  {uld.trend}
+                </span>
+                <span className="text-xs text-slate-400">{uld.status}</span>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    uld.exposureScore >= 80 ? "bg-rose-400" : uld.exposureScore >= 50 ? "bg-amber-400" : "bg-emerald-400"
+                  )}
+                  style={{ width: `${uld.exposureScore}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
