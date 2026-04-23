@@ -1,4 +1,4 @@
-import { Line } from "react-chartjs-2";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
@@ -19,53 +19,16 @@ export default function AnalyticsPage() {
 
   const complianceData = useMemo(() => {
     try {
-      return {
-        labels: ulds.map((u) => u.id),
-        datasets: [
-          {
-            label: "Exposure Score",
-            data: ulds.map((u) => u.exposureScore),
-            borderColor: "#ffb44a",
-            backgroundColor: "rgba(255, 180, 74, 0.12)",
-            fill: true,
-            tension: 0.32,
-          },
-          {
-            label: "Risk Score x100",
-            data: ulds.map((u) => Math.round(u.riskScore * 100)),
-            borderColor: "#3bd8d0",
-            backgroundColor: "rgba(59, 216, 208, 0.12)",
-            fill: true,
-            tension: 0.32,
-          },
-        ],
-      };
+      return ulds.map((u) => ({
+        id: u.id,
+        exposureScore: u.exposureScore,
+        riskScore: Math.round(u.riskScore * 100),
+      }));
     } catch (err) {
       console.error("[Analytics] Compliance data error:", err);
-      return { labels: [], datasets: [] };
+      return [];
     }
   }, [ulds]);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false as const,
-    plugins: {
-      legend: {
-        labels: { color: "#cbd5e1", font: { size: 10 } },
-      },
-    },
-    scales: {
-      x: {
-        ticks: { color: "#94a3b8", font: { size: 10 } },
-        grid: { color: "rgba(148,163,184,0.08)" },
-      },
-      y: {
-        ticks: { color: "#94a3b8", font: { size: 10 } },
-        grid: { color: "rgba(148,163,184,0.08)" },
-      },
-    },
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
@@ -91,8 +54,44 @@ export default function AnalyticsPage() {
             </div>
           </CardHeader>
           <CardContent className="min-h-[240px] md:min-h-[260px]">
-            <div className="h-full w-full">
-              <Line data={complianceData} options={chartOptions} />
+            <div className="h-full w-full" style={{ minHeight: 200 }}>
+              {complianceData.length > 0 && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={complianceData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
+                    <XAxis 
+                      dataKey="id" 
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      stroke="rgba(148,163,184,0.08)"
+                    />
+                    <YAxis 
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      stroke="rgba(148,163,184,0.08)"
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: "rgba(15, 29, 49, 0.9)", border: "1px solid rgba(148,163,184,0.2)" }}
+                      itemStyle={{ color: "#cbd5e1" }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="exposureScore" 
+                      stroke="#ffb44a" 
+                      strokeWidth={2}
+                      dot={{ fill: "#ffb44a" }}
+                      name="Exposure Score"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="riskScore" 
+                      stroke="#3bd8d0" 
+                      strokeWidth={2}
+                      dot={{ fill: "#3bd8d0" }}
+                      name="Risk Score x100"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>

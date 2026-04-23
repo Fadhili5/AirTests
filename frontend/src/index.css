@@ -2,17 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* shadcn/ui theme (oklch) - available for Shadcn* components */
+    --background: oklch(0.15 0.02 250);
+    --foreground: oklch(0.95 0.01 250);
+    --card: oklch(0.18 0.02 250);
+    --card-foreground: oklch(0.95 0.01 250);
+    --popover: oklch(0.18 0.02 250);
+    --popover-foreground: oklch(0.95 0.01 250);
+    --primary: oklch(0.35 0.15 250);
+    --primary-foreground: oklch(0.98 0.01 250);
+    --secondary: oklch(0.25 0.05 250);
+    --secondary-foreground: oklch(0.95 0.01 250);
+    --muted: oklch(0.22 0.03 250);
+    --muted-foreground: oklch(0.65 0.02 250);
+    --accent: oklch(0.75 0.20 145);
+    --accent-foreground: oklch(0.15 0.02 250);
+    --destructive: oklch(0.55 0.22 25);
+    --destructive-foreground: oklch(0.98 0.01 250);
+    --border: oklch(0.30 0.03 250);
+    --input: oklch(0.25 0.03 250);
+    --ring: oklch(0.35 0.15 250);
+    --radius: 0.5rem;
+    --success: oklch(0.70 0.18 145);
+    --warning: oklch(0.75 0.15 85);
+    --critical: oklch(0.55 0.22 25);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-[#081321] text-slate-50 antialiased;
+    font-family: "Bahnschrift", "Segoe UI", sans-serif;
+  }
+}
+
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
   overflow: hidden;
-}
-
-body {
-  @apply bg-[#081321] text-slate-50 antialiased;
-  font-family: "Bahnschrift", "Segoe UI", sans-serif;
 }
 
 * {

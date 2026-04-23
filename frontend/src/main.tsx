@@ -2,21 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js";
 import { App } from "./App";
 import { useAeroStore } from "./store/use-aero-store";
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 import { initAuth } from "./auth";
 import { registerServiceWorker } from "./register-sw";
 
