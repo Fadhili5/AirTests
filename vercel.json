@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "backend/api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/api/index.js"
+    }
+  ],
+  "env": {
+    "REDIS_DISABLED": "true",
+    "POSTGRES_DISABLED": "true",
+    "AUTH_DISABLED": "true",
+    "RISK_SERVICE_DISABLED": "true",
+    "ONE_RECORD_ENABLED": "false"
+  }
+}
