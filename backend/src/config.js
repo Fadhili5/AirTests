@@ -19,6 +19,10 @@ export const config = {
     url: process.env.REDIS_URL || "redis://localhost:6379",
     disabled: toBool(process.env.REDIS_DISABLED, false),
   },
+  postgres: {
+    url: process.env.POSTGRES_URL || "",
+    disabled: toBool(process.env.POSTGRES_DISABLED, false),
+  },
   weather: {
     apiKey: process.env.OPENWEATHER_API_KEY || "",
     baseUrl:
@@ -30,6 +34,10 @@ export const config = {
     baseUrl: process.env.ONE_RECORD_BASE_URL || "http://localhost:8080",
     authToken: process.env.ONE_RECORD_AUTH_TOKEN || "",
     enabled: toBool(process.env.ONE_RECORD_ENABLED, true),
+  },
+  risk: {
+    baseUrl: process.env.RISK_SERVICE_URL || "http://localhost:8010",
+    enabled: !toBool(process.env.RISK_SERVICE_DISABLED, false),
   },
   auth: {
     disabled: toBool(process.env.AUTH_DISABLED, false),
@@ -52,6 +60,15 @@ export const config = {
     allowableMinutes: Number.parseFloat(
       process.env.DEFAULT_ALLOWABLE_EXPOSURE_MINUTES || "60",
     ),
+    overrideAllowableMinutes: process.env.OVERRIDE_ALLOWABLE_EXPOSURE_MINUTES
+      ? Number.parseFloat(process.env.OVERRIDE_ALLOWABLE_EXPOSURE_MINUTES)
+      : null,
+    overrideMinTemp: process.env.OVERRIDE_MIN_TEMP_C
+      ? Number.parseFloat(process.env.OVERRIDE_MIN_TEMP_C)
+      : null,
+    overrideMaxTemp: process.env.OVERRIDE_MAX_TEMP_C
+      ? Number.parseFloat(process.env.OVERRIDE_MAX_TEMP_C)
+      : null,
     maxGapMinutes: Number.parseFloat(process.env.MAX_GAP_MINUTES || "30"),
     warningPercent: Number.parseFloat(process.env.WARNING_THRESHOLD_PERCENT || "80"),
   },

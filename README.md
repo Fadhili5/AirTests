@@ -1,153 +1,88 @@
-# OR-ATM
+# AeroSentinel X
 
-OR-ATM, the ONE Record Ambient Temperature Monitor, is a real-time cold chain compliance platform for temperature-sensitive air cargo. It ingests telemetry from ULD-mounted IoT devices, enriches each reading with environmental context, computes cumulative temperature exposure in real time, updates a ONE Record-aligned digital twin, and delivers operational visibility through secured APIs and a live web dashboard.
+AeroSentinel X is a real-time cold chain control and compliance platform for temperature-sensitive air cargo. It monitors ULD telemetry, predicts excursion risk, tracks cumulative exposure, detects operational failures, orchestrates mitigation actions, and maintains a ONE Record-aligned digital twin as the source of truth.
 
-## Overview
+## Architecture
 
-The platform is designed around a production-oriented event pipeline:
+`IoT Sensors -> MQTT -> Ingestion API -> Risk Engine -> Exposure Engine -> Decision Engine -> Action Orchestrator -> ONE Record -> Dashboard`
 
-`IoT Simulator -> MQTT Broker -> Node.js Ingestion API -> Exposure Engine -> ONE Record Digital Twin -> React Dashboard`
+The repository includes:
 
-Core capabilities include:
-
-- Real-time MQTT ingestion for multiple concurrent ULDs
-- Exposure tracking with cumulative excursion logic and gap handling
-- Weather enrichment with caching and circuit-breaker protection
-- Webhook and email alert delivery for warning and breach thresholds
-- Socket.IO streaming for live dashboard updates
-- Keycloak-compatible bearer token protection for operational APIs
-- Prometheus-ready metrics endpoints for observability
-
-## Repository Structure
-
-- `broker/`
-  Lightweight local MQTT broker for no-Docker development using Aedes.
 - `backend/`
-  Express API, MQTT consumer, exposure engine, weather enrichment, alerting, metrics, and ONE Record adapter.
+  Express backend with MQTT ingestion, operational context detection, exposure engine, decision engine, action orchestration, audit logging, alerts, analytics, and ONE Record integration.
+- `risk-service/`
+  FastAPI microservice for predictive risk scoring.
 - `frontend/`
-  Vite/React dashboard with Leaflet map, Chart.js telemetry views, and Socket.IO subscriptions.
+  React/Vite control center with live map, alerts, workflow panel, action timeline, and compliance analytics.
 - `simulator/`
-  Multi-ULD telemetry publisher and load generator.
+  Multi-ULD simulator with heatwave, delay, and sensor-failure scenarios.
+- `broker/`
+  Local Aedes MQTT broker for no-Docker development.
 - `infra/`
-  Docker Compose stack for Mosquitto, Redis, Keycloak, GraphDB, NE:ONE, Prometheus, Grafana, and MailHog.
-- `docs/`
-  API details, demo instructions, and supporting operational notes.
+  Docker Compose stack for Mosquitto, Redis, PostgreSQL, Keycloak, GraphDB, NE:ONE, Prometheus, Grafana, MailHog, and the risk service.
 
-## Key Runtime Components
+## Core Capabilities
 
-### Backend
+- Real-time MQTT ingestion for multiple ULD streams
+- Predictive risk scoring with Python service and local fallback model
+- Exposure tracking with cumulative excursion logic and gap handling
+- Operational context detection for tarmac exposure, delays, handling gaps, battery, and signal health
+- Decision engine for preventive and critical actions
+- Action orchestration and SOP workflow tracking
+- Alerting over webhook and email channels
+- ONE Record digital twin extensions for risk, compliance, and mitigation history
+- Live React operations dashboard with Socket.IO updates
 
-The backend provides:
+## Local Run
 
-- MQTT topic subscription on `uld/{uld_id}/telemetry`
-- Payload validation and dead-letter handling
-- Cumulative exposure computation with a 30-minute gap cap
-- Redis-backed persistence, with automatic in-memory fallback for local development
-- OpenWeatherMap enrichment with Redis caching
-- ONE Record update adapter for digital twin synchronization
-- Webhook and SMTP-style email notifications
-- Metrics at `/metrics`
+Local mode is designed to work even without Redis, PostgreSQL, Keycloak, the risk microservice, or NE:ONE running locally.
 
-### Frontend
+What local mode does:
 
-The dashboard provides:
+- starts a local MQTT broker
+- uses in-memory persistence when Redis is unavailable
+- uses in-memory audit storage when PostgreSQL is unavailable
+- falls back to an embedded risk scorer when the FastAPI risk service is unavailable
+- disables API auth when `AUTH_DISABLED=true`
+- serves the frontend without Keycloak when `VITE_AUTH_DISABLED=true`
 
-- Live ULD location map
-- Status-aware detail cards
-- Real-time alert feed
-- Temperature versus ambient trend visualization
-
-### Simulator
-
-The simulator publishes realistic readings for multiple ULDs, including:
-
-- nominal in-range operation
-- configurable out-of-range excursions
-- changing route coordinates across ground and flight phases
-
-## Running Locally Without Docker
-
-This repository now supports a full local development path even when Redis, Mosquitto, Keycloak, and NE:ONE are not installed on the machine.
-
-### What local mode does
-
-- starts a local MQTT broker from `broker/`
-- runs the backend with in-memory persistence if Redis is unavailable
-- disables API auth in local mode when explicitly configured
-- skips the Keycloak login flow in the frontend when `VITE_AUTH_DISABLED=true`
-- allows the simulator to publish directly to the local broker
-
-### 1. Install dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Start the local MQTT broker
-
-```bash
-npm run dev:broker
-```
-
-Or start the full local stack at once:
+Start the full local stack:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\start-local.ps1
 ```
 
-### 3. Start the backend in local mode
-
-PowerShell:
+Stop the local stack:
 
 ```powershell
-$env:AUTH_DISABLED="true"
-$env:REDIS_DISABLED="true"
-$env:ONE_RECORD_ENABLED="false"
-$env:MQTT_URL="mqtt://localhost:1883"
-npm run dev:backend
+powershell -ExecutionPolicy Bypass -File .\scripts\stop-local.ps1
 ```
 
-### 4. Start the frontend in local mode
-
-PowerShell:
-
-```powershell
-$env:VITE_AUTH_DISABLED="true"
-$env:VITE_API_URL="http://localhost:3000"
-$env:VITE_SOCKET_URL="http://localhost:3000"
-npm run dev:frontend
-```
-
-You can also copy [frontend/.env.local.example](</c:/Users/User/Desktop/me/frontend/.env.local.example>) to `frontend/.env.local`.
-
-### 5. Start the simulator
-
-PowerShell:
-
-```powershell
-$env:MQTT_URL="mqtt://localhost:1883"
-$env:PUBLISH_INTERVAL_MS="15000"
-npm run dev:simulator
-```
-
-### 6. Open the application
+Local endpoints:
 
 - Dashboard: `http://localhost:5173`
 - Backend API: `http://localhost:3000`
 - Metrics: `http://localhost:3000/metrics`
 
-## Running With Docker
+## Docker Run
 
-For the full infrastructure stack, including Redis, Keycloak, GraphDB, NE:ONE, Prometheus, Grafana, and MailHog:
+Bring up the full infrastructure stack:
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-Services exposed by the Docker stack:
+Main services:
 
 - Dashboard: `http://localhost:5173`
 - Backend API: `http://localhost:3000`
+- Risk service: `http://localhost:8010`
 - Keycloak: `http://localhost:8081`
 - NE:ONE: `http://localhost:8080`
 - GraphDB: `http://localhost:7200`
@@ -155,63 +90,70 @@ Services exposed by the Docker stack:
 - Grafana: `http://localhost:3001`
 - MailHog: `http://localhost:8025`
 
-## API Summary
+## API Surface
 
-Protected endpoints are available under `/api/*`.
+Protected APIs live under `/api/*` when auth is enabled.
 
 - `GET /api/health`
+- `GET /api/platform`
 - `GET /api/fleet`
+- `GET /api/control-center`
+- `GET /api/analytics`
+- `GET /api/alerts`
 - `GET /api/uld/:id/status`
+- `GET /api/uld/:id/actions`
+- `GET /api/uld/:id/workflows`
+- `GET /api/uld/:id/timeline`
+- `POST /api/actions/:id/complete`
 - `POST /api/alert/subscribe`
 - `POST /api/uld/:id/reset`
 
-Detailed API notes are in [docs/api.md](</c:/Users/User/Desktop/me/docs/api.md>).
-
 ## Configuration
 
-### Common environment variables
+Common environment variables:
 
 - `OPENWEATHER_API_KEY`
 - `MQTT_URL`
 - `REDIS_URL`
+- `POSTGRES_URL`
+- `RISK_SERVICE_URL`
 - `ONE_RECORD_BASE_URL`
 - `KEYCLOAK_ISSUER`
 - `KEYCLOAK_JWKS_URI`
 - `KEYCLOAK_AUDIENCE`
 
-### Local development switches
+Local development switches:
 
 - `AUTH_DISABLED=true`
 - `REDIS_DISABLED=true`
+- `POSTGRES_DISABLED=true`
+- `RISK_SERVICE_DISABLED=true`
 - `ONE_RECORD_ENABLED=false`
 - `VITE_AUTH_DISABLED=true`
 
 ## Testing
 
-Run the backend unit and API tests with:
+Run backend tests:
 
 ```bash
 npm test
 ```
 
-Build the frontend with:
+Build the frontend:
 
 ```bash
 npm --workspace frontend run build
 ```
 
-## Operational Notes
+## Demo Scenarios
 
-- In local mode, Redis is replaced by an in-memory store automatically when disabled or unavailable.
-- In local mode, the frontend can run without Keycloak by setting `VITE_AUTH_DISABLED=true`.
-- NE:ONE integration is configurable and can be disabled for local-only development.
-- Weather enrichment falls back gracefully if an OpenWeatherMap key is not supplied.
+See:
 
-## Demo Guide
+- [docs/demo.md](</c:/Users/User/Desktop/me/docs/demo.md>)
+- [docs/scenarios.md](</c:/Users/User/Desktop/me/docs/scenarios.md>)
 
-See [docs/demo.md](</c:/Users/User/Desktop/me/docs/demo.md>) for a short demo script covering simulator startup, alert generation, and API verification.
+These cover:
 
-## Convenience Scripts
-
-- Start local stack: [scripts/start-local.ps1](</c:/Users/User/Desktop/me/scripts/start-local.ps1>)
-- Stop local stack: [scripts/stop-local.ps1](</c:/Users/User/Desktop/me/scripts/stop-local.ps1>)
+- tarmac heat risk with preventive action
+- delay-to-breach escalation
+- recovery and audit verification

@@ -11,6 +11,21 @@ services:
     ports:
       - "6379:6379"
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aerosentinel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  risk-service:
+    build:
+      context: ../risk-service
+    ports:
+      - "8010:8010"
+
   graphdb:
     image: ontotext/graphdb:10.8.4
     ports:
@@ -47,16 +62,20 @@ services:
       PORT: 3000
       MQTT_URL: mqtt://mqtt-broker:1883
       REDIS_URL: redis://redis:6379
+      POSTGRES_URL: postgres://postgres:postgres@postgres:5432/aerosentinel
       KEYCLOAK_ISSUER: http://keycloak:8080/realms/or-atm
       KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/or-atm/protocol/openid-connect/certs
       KEYCLOAK_AUDIENCE: or-atm-api
       ONE_RECORD_BASE_URL: http://ne-one-server:8080
+      RISK_SERVICE_URL: http://risk-service:8010
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
       SMTP_HOST: mailhog
       SMTP_PORT: 1025
     depends_on:
       - mqtt-broker
       - redis
+      - postgres
+      - risk-service
       - keycloak
       - ne-one-server
       - mailhog
@@ -71,6 +90,7 @@ services:
       PUBLISH_INTERVAL_MS: 300000
       ULD_IDS: JTN-7890,JTN-8972,JTN-4421
       DEVIATION_PROBABILITY: 0.25
+      SCENARIO: heatwave
     depends_on:
       - mqtt-broker
 

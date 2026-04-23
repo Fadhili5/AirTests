@@ -26,14 +26,27 @@ export const shipmentRules = {
 };
 
 export function getRuleForUld(uldId, defaults) {
+  const knownRule = shipmentRules[uldId];
+
+  if (knownRule) {
+    return {
+      ...knownRule,
+      allowableExposureMinutes:
+        defaults.overrideAllowableMinutes ?? knownRule.allowableExposureMinutes,
+      minTempC: defaults.overrideMinTemp ?? knownRule.minTempC,
+      maxTempC: defaults.overrideMaxTemp ?? knownRule.maxTempC,
+    };
+  }
+
   return (
-    shipmentRules[uldId] || {
+    {
       uldId,
       shipmentId: `AWB-${uldId}`,
       productType: "Pharma",
-      minTempC: defaults.defaultMinTemp,
-      maxTempC: defaults.defaultMaxTemp,
-      allowableExposureMinutes: defaults.allowableMinutes,
+      minTempC: defaults.overrideMinTemp ?? defaults.defaultMinTemp,
+      maxTempC: defaults.overrideMaxTemp ?? defaults.defaultMaxTemp,
+      allowableExposureMinutes:
+        defaults.overrideAllowableMinutes ?? defaults.allowableMinutes,
     }
   );
 }

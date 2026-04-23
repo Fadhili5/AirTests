@@ -6,7 +6,16 @@ import { authMiddleware } from "./middleware/auth.js";
 import { buildApiRouter } from "./routes/api.js";
 import { registry } from "./platform/metrics.js";
 
-export function buildApp({ config, logger, exposureRepository, subscriptionRepository }) {
+export function buildApp({
+  config,
+  logger,
+  exposureRepository,
+  operationsRepository,
+  analyticsService,
+  actionOrchestrator,
+  auditStore,
+  subscriptionRepository,
+}) {
   const app = express();
   app.use(cors());
   app.use(helmet());
@@ -16,7 +25,12 @@ export function buildApp({ config, logger, exposureRepository, subscriptionRepos
   app.use(
     "/api",
     buildApiRouter({
+      config,
       exposureRepository,
+      operationsRepository,
+      analyticsService,
+      actionOrchestrator,
+      auditStore,
       subscriptionRepository,
       authMiddleware: authMiddleware(config),
     }),

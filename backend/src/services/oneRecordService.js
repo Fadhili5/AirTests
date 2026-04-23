@@ -6,7 +6,7 @@ export class OneRecordService {
     this.logger = logger;
   }
 
-  async upsertTwin({ reading, status }) {
+  async upsertTwin({ reading, status, risk, actions = [], workflows = [], context }) {
     if (!this.config.oneRecord.enabled) {
       return null;
     }
@@ -36,6 +36,30 @@ export class OneRecordService {
         exposureRemaining: status.exposureRemaining,
         status: status.status,
       },
+      riskScore: {
+        "@type": "RiskScore",
+        value: risk?.risk_score,
+        riskLevel: risk?.risk_level,
+        timeToBreachMinutes: risk?.time_to_breach_minutes,
+      },
+      operationalContext: {
+        "@type": "OperationalContext",
+        airportZone: context?.airportZone,
+        delayDetected: context?.delayDetected,
+        handlingGap: context?.handlingGap,
+        tarmacExposure: context?.tarmacExposure,
+      },
+      actionHistory: actions.map((action) => ({
+        "@type": "MitigationAction",
+        action: action.action,
+        status: action.status,
+        responseTimeMinutes: action.responseTimeMinutes,
+      })),
+      workflowHistory: workflows.map((workflow) => ({
+        "@type": "WorkflowExecution",
+        name: workflow.name,
+        status: workflow.status,
+      })),
     };
 
     try {

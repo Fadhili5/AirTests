@@ -3,12 +3,18 @@ import { Server } from "socket.io";
 import { config } from "./config.js";
 import { logger } from "./platform/logger.js";
 import { createRedisClient } from "./platform/redis.js";
+import { createAuditStore } from "./platform/postgres.js";
 import { ExposureRepository } from "./repositories/exposureRepository.js";
+import { OperationsRepository } from "./repositories/operationsRepository.js";
 import { SubscriptionRepository } from "./repositories/subscriptionRepository.js";
 import { DlqRepository } from "./repositories/dlqRepository.js";
 import { WeatherService } from "./services/weatherService.js";
 import { AlertService } from "./services/alertService.js";
 import { OneRecordService } from "./services/oneRecordService.js";
+import { RiskService } from "./services/riskService.js";
+import { AnalyticsService } from "./services/analyticsService.js";
+import { ActionOrchestrator } from "./services/actionOrchestrator.js";
+import { NotificationRouter } from "./services/notificationRouter.js";
 import { TelemetryPipeline } from "./services/telemetryPipeline.js";
 import { MqttConsumer } from "./services/mqttConsumer.js";
 import { buildApp } from "./app.js";
@@ -16,26 +22,46 @@ import { buildApp } from "./app.js";
 const redis = await createRedisClient(config.redis.url, {
   disabled: config.redis.disabled,
 });
+const auditStore = await createAuditStore(
+  config.postgres.url,
+  config.postgres.disabled,
+);
 const exposureRepository = new ExposureRepository(redis, config.retention.eventListLimit);
+const operationsRepository = new OperationsRepository(redis, config.retention.eventListLimit);
 const subscriptionRepository = new SubscriptionRepository(redis);
 const dlqRepository = new DlqRepository(redis);
-
-const app = buildApp({
-  config,
-  logger,
+const analyticsService = new AnalyticsService({
   exposureRepository,
-  subscriptionRepository,
+  operationsRepository,
 });
 
-const server = http.createServer(app);
-const io = new Server(server, {
+const io = new Server({
   cors: { origin: "*" },
+});
+
+const actionOrchestrator = new ActionOrchestrator({
+  operationsRepository,
+  auditStore,
+  io,
 });
 
 const pipeline = new TelemetryPipeline({
   config,
   exposureRepository,
+  operationsRepository,
   weatherService: new WeatherService({ redis, config, logger }),
+  riskService: new RiskService({ config, logger }),
+  actionOrchestrator,
+  notificationRouter: new NotificationRouter({
+    alertService: new AlertService({
+      subscriptions: subscriptionRepository,
+      smtp: config.smtp,
+      logger,
+    }),
+    auditStore,
+    io,
+  }),
+  auditStore,
   alertService: new AlertService({
     subscriptions: subscriptionRepository,
     smtp: config.smtp,
@@ -44,6 +70,20 @@ const pipeline = new TelemetryPipeline({
   oneRecordService: new OneRecordService({ config, logger }),
   io,
 });
+
+const app = buildApp({
+  config,
+  logger,
+  exposureRepository,
+  operationsRepository,
+  analyticsService,
+  actionOrchestrator,
+  auditStore,
+  subscriptionRepository,
+});
+
+const server = http.createServer(app);
+io.attach(server);
 
 const mqttConsumer = new MqttConsumer({
   config,

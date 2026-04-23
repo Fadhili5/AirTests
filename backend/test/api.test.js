@@ -28,6 +28,43 @@ class FakeSubscriptionRepository {
   }
 }
 
+class FakeOperationsRepository {
+  async listPendingActions() {
+    return [];
+  }
+
+  async listActiveWorkflows() {
+    return [];
+  }
+
+  async getActions() {
+    return [];
+  }
+
+  async getWorkflows() {
+    return [];
+  }
+
+  async getTimeline() {
+    return [];
+  }
+}
+
+class FakeAnalyticsService {
+  async getSummary() {
+    return {
+      compliantShipmentsPercent: 100,
+      averageExposureMinutes: 0,
+    };
+  }
+}
+
+class FakeAuditStore {
+  async list() {
+    return [];
+  }
+}
+
 test("health endpoint is protected when auth enabled", async () => {
   const app = buildApp({
     config: {
@@ -40,6 +77,10 @@ test("health endpoint is protected when auth enabled", async () => {
     },
     logger: pino({ enabled: false }),
     exposureRepository: new FakeExposureRepository(),
+    operationsRepository: new FakeOperationsRepository(),
+    analyticsService: new FakeAnalyticsService(),
+    actionOrchestrator: { completeAction: async () => null },
+    auditStore: new FakeAuditStore(),
     subscriptionRepository: new FakeSubscriptionRepository(),
   });
 
@@ -54,6 +95,10 @@ test("status endpoint returns data when auth disabled", async () => {
     },
     logger: pino({ enabled: false }),
     exposureRepository: new FakeExposureRepository(),
+    operationsRepository: new FakeOperationsRepository(),
+    analyticsService: new FakeAnalyticsService(),
+    actionOrchestrator: { completeAction: async () => null },
+    auditStore: new FakeAuditStore(),
     subscriptionRepository: new FakeSubscriptionRepository(),
   });
 

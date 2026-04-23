@@ -63,6 +63,11 @@ class InMemoryRedis {
     this.hashes.set(key, hash);
   }
 
+  async hGet(key, field) {
+    const hash = this.hashes.get(key) || new Map();
+    return hash.has(field) ? hash.get(field) : null;
+  }
+
   async hGetAll(key) {
     const hash = this.hashes.get(key) || new Map();
     return Object.fromEntries(hash.entries());
