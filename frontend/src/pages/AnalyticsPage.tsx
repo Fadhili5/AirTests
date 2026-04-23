@@ -1,5 +1,6 @@
 import { Line } from "react-chartjs-2";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { summarizeSystem } from "../lib/aero-control";
 import { useMemo } from "react";
@@ -7,34 +8,48 @@ import { cn } from "../lib/utils";
 
 export default function AnalyticsPage() {
   const { ulds, alerts, tasks } = useAeroStore();
-  const stats = useMemo(() => summarizeSystem(ulds, alerts, tasks), [ulds, alerts, tasks]);
+  const stats = useMemo(() => {
+    try {
+      return summarizeSystem(ulds, alerts, tasks);
+    } catch (err) {
+      console.error("[Analytics] Stats error:", err);
+      return [];
+    }
+  }, [ulds, alerts, tasks]);
 
-  const complianceData = useMemo(() => ({
-    labels: ulds.map((u) => u.id),
-    datasets: [
-      {
-        label: "Exposure Score",
-        data: ulds.map((u) => u.exposureScore),
-        borderColor: "#ffb44a",
-        backgroundColor: "rgba(255, 180, 74, 0.12)",
-        fill: true,
-        tension: 0.32,
-      },
-      {
-        label: "Risk Score x100",
-        data: ulds.map((u) => Math.round(u.riskScore * 100)),
-        borderColor: "#3bd8d0",
-        backgroundColor: "rgba(59, 216, 208, 0.12)",
-        fill: true,
-        tension: 0.32,
-      },
-    ],
-  }), [ulds]);
+  const complianceData = useMemo(() => {
+    try {
+      return {
+        labels: ulds.map((u) => u.id),
+        datasets: [
+          {
+            label: "Exposure Score",
+            data: ulds.map((u) => u.exposureScore),
+            borderColor: "#ffb44a",
+            backgroundColor: "rgba(255, 180, 74, 0.12)",
+            fill: true,
+            tension: 0.32,
+          },
+          {
+            label: "Risk Score x100",
+            data: ulds.map((u) => Math.round(u.riskScore * 100)),
+            borderColor: "#3bd8d0",
+            backgroundColor: "rgba(59, 216, 208, 0.12)",
+            fill: true,
+            tension: 0.32,
+          },
+        ],
+      };
+    } catch (err) {
+      console.error("[Analytics] Compliance data error:", err);
+      return { labels: [], datasets: [] };
+    }
+  }, [ulds]);
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    animation: false,
+    animation: false as const,
     plugins: {
       legend: {
         labels: { color: "#cbd5e1", font: { size: 10 } },

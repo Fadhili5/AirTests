@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 
@@ -7,7 +8,12 @@ export default function InterventionsPage() {
   const { tasks, flashes, markTaskCompleted, timeline } = useAeroStore();
 
   const sorted = useMemo(() => {
-    return [...tasks].sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+    try {
+      return [...tasks].sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+    } catch (err) {
+      console.error("[Interventions] Sort error:", err);
+      return tasks;
+    }
   }, [tasks]);
 
   const pending = sorted.filter((t) => t.status === "Pending");
@@ -25,16 +31,24 @@ export default function InterventionsPage() {
   }, [sorted]);
 
   const getSlaColor = (dueAt: string) => {
-    const minutes = Math.round((new Date(dueAt).getTime() - Date.now()) / 60000);
-    if (minutes < 0) return "text-rose-400";
-    if (minutes < 10) return "text-amber-400";
-    return "text-emerald-400";
+    try {
+      const minutes = Math.round((new Date(dueAt).getTime() - Date.now()) / 60000);
+      if (minutes < 0) return "text-rose-400";
+      if (minutes < 10) return "text-amber-400";
+      return "text-emerald-400";
+    } catch {
+      return "text-slate-400";
+    }
   };
 
   const formatSla = (dueAt: string) => {
-    const minutes = Math.round((new Date(dueAt).getTime() - Date.now()) / 60000);
-    if (minutes < 0) return `${Math.abs(minutes)}m overdue`;
-    return `${minutes}m remaining`;
+    try {
+      const minutes = Math.round((new Date(dueAt).getTime() - Date.now()) / 60000);
+      if (minutes < 0) return `${Math.abs(minutes)}m overdue`;
+      return `${minutes}m remaining`;
+    } catch {
+      return "Invalid SLA";
+    }
   };
 
   return (
@@ -86,7 +100,13 @@ export default function InterventionsPage() {
                 </div>
                 {task.status !== "Completed" && (
                   <button
-                    onClick={() => markTaskCompleted(task.id)}
+                    onClick={() => {
+                      try {
+                        markTaskCompleted(task.id);
+                      } catch (err) {
+                        console.error("[Interventions] Complete task error:", err);
+                      }
+                    }}
                     className="mt-2 w-full rounded-lg bg-cyan-400/15 text-cyan-300 border border-cyan-400/20 py-1.5 text-xs hover:bg-cyan-400/25 transition-colors"
                   >
                     Mark Complete

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Line } from "react-chartjs-2";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 
@@ -11,26 +12,31 @@ export default function ExposureAnalysisPage() {
   const selected = ulds.find((u) => u.id === selectedUldId) || ulds[0];
 
   const chartData = useMemo(() => {
-    if (!selected) return null;
-    return {
-      labels: ["Ground", "Tarmac", "Flight", "Total"],
-      datasets: [
-        {
-          label: "Exposure Minutes",
-          data: [selected.groundDelayExposure, selected.tarmacExposure, selected.inflightExposure, selected.totalExposure],
-          borderColor: "#3bd8d0",
-          backgroundColor: "rgba(59, 216, 208, 0.12)",
-          fill: true,
-          tension: 0.36,
-        },
-      ],
-    };
+    try {
+      if (!selected) return null;
+      return {
+        labels: ["Ground", "Tarmac", "Flight", "Total"],
+        datasets: [
+          {
+            label: "Exposure Minutes",
+            data: [selected.groundDelayExposure, selected.tarmacExposure, selected.inflightExposure, selected.totalExposure],
+            borderColor: "#3bd8d0",
+            backgroundColor: "rgba(59, 216, 208, 0.12)",
+            fill: true,
+            tension: 0.36,
+          },
+        ],
+      };
+    } catch (err) {
+      console.error("[ExposureAnalysis] Chart data error:", err);
+      return null;
+    }
   }, [selected]);
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    animation: false,
+    animation: false as const,
     plugins: {
       legend: {
         labels: { color: "#cbd5e1", font: { size: 10 } },
@@ -62,7 +68,13 @@ export default function ExposureAnalysisPage() {
           {ulds.map((uld) => (
             <button
               key={uld.id}
-              onClick={() => setSelectedUldId(uld.id)}
+              onClick={() => {
+                try {
+                  setSelectedUldId(uld.id);
+                } catch (err) {
+                  console.error("[ExposureAnalysis] Selection error:", err);
+                }
+              }}
               className={cn(
                 "w-full text-left rounded-lg border p-3 transition-all",
                 selectedUldId === uld.id

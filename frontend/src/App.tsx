@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import { RealtimeProvider } from "./components/providers/RealtimeProvider";
+import { ErrorBoundary } from "./components/providers/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const UldTrackingPage = lazy(() => import("./pages/UldTrackingPage"));
@@ -11,6 +12,28 @@ const InterventionsPage = lazy(() => import("./pages/InterventionsPage"));
 const AirportsPage = lazy(() => import("./pages/AirportsPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+
+function RouteErrorFallback({ name }: { name: string }) {
+  return (
+    <div className="flex h-full min-h-[50vh] items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-xl border border-rose-400/20 bg-[#0c1522] p-6 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-400/15">
+          <span className="text-rose-400 text-lg font-bold">!</span>
+        </div>
+        <h3 className="text-base font-semibold text-slate-100">{name} Error</h3>
+        <p className="mt-2 text-sm text-slate-400">This module failed to load. Please try again or reload the application.</p>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-lg bg-cyan-400/15 px-4 py-2 text-sm font-medium text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/25 transition-colors"
+          >
+            Reload App
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   return (
@@ -28,14 +51,46 @@ export function App() {
           >
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/uld-tracking" element={<UldTrackingPage />} />
-              <Route path="/exposure-analysis" element={<ExposureAnalysisPage />} />
-              <Route path="/alerts" element={<AlertsPage />} />
-              <Route path="/interventions" element={<InterventionsPage />} />
-              <Route path="/airports" element={<AirportsPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/dashboard" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Dashboard" />}>
+                  <DashboardPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/uld-tracking" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="ULD Tracking" />}>
+                  <UldTrackingPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/exposure-analysis" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Exposure Analysis" />}>
+                  <ExposureAnalysisPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/alerts" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Alerts" />}>
+                  <AlertsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/interventions" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Interventions" />}>
+                  <InterventionsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/airports" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Airports" />}>
+                  <AirportsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/analytics" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Analytics" />}>
+                  <AnalyticsPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/settings" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Settings" />}>
+                  <SettingsPage />
+                </ErrorBoundary>
+              } />
             </Routes>
           </Suspense>
         </AppLayout>

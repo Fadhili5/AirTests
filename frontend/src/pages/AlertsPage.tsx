@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 
@@ -8,19 +9,33 @@ export default function AlertsPage() {
   const [severityFilter, setSeverityFilter] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
   const [acknowledged, setAcknowledged] = useState<Set<string>>(new Set());
 
-  const filtered = severityFilter === "ALL"
-    ? alerts
-    : alerts.filter((a) => a.level === severityFilter);
+  let filtered: typeof alerts;
+  try {
+    filtered = severityFilter === "ALL" ? alerts : alerts.filter((a) => a.level === severityFilter);
+  } catch (err) {
+    console.error("[Alerts] Filter error:", err);
+    filtered = [];
+  }
 
   const handleAcknowledge = (id: string) => {
-    setAcknowledged((prev) => new Set(prev).add(id));
+    try {
+      setAcknowledged((prev) => new Set(prev).add(id));
+    } catch (err) {
+      console.error("[Alerts] Acknowledge error:", err);
+    }
   };
 
-  const grouped = {
-    critical: alerts.filter((a) => a.level === "HIGH"),
-    watch: alerts.filter((a) => a.level === "MEDIUM"),
-    info: alerts.filter((a) => a.level === "LOW"),
-  };
+  let grouped: { critical: typeof alerts; watch: typeof alerts; info: typeof alerts };
+  try {
+    grouped = {
+      critical: alerts.filter((a) => a.level === "HIGH"),
+      watch: alerts.filter((a) => a.level === "MEDIUM"),
+      info: alerts.filter((a) => a.level === "LOW"),
+    };
+  } catch (err) {
+    console.error("[Alerts] Grouping error:", err);
+    grouped = { critical: [], watch: [], info: [] };
+  }
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">

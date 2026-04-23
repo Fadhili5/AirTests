@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 import { MapContainer, TileLayer, CircleMarker, Popup, Circle, Tooltip } from "react-leaflet";
@@ -8,27 +9,32 @@ export default function AirportsPage() {
   const { ulds } = useAeroStore();
 
   const airportSummary = useMemo(() => {
-    const byAirport = new Map<string, { risk: number; count: number; delays: number; lat: number; lon: number }>();
+    try {
+      const byAirport = new Map<string, { risk: number; count: number; delays: number; lat: number; lon: number }>();
 
-    ulds.forEach((uld) => {
-      const current = byAirport.get(uld.airport) || { risk: 0, count: 0, delays: 0, lat: uld.lat, lon: uld.lon };
-      current.risk += uld.riskScore;
-      current.count += 1;
-      current.delays += uld.phase === "Ground" ? 1 : 0;
-      byAirport.set(uld.airport, current);
-    });
+      ulds.forEach((uld) => {
+        const current = byAirport.get(uld.airport) || { risk: 0, count: 0, delays: 0, lat: uld.lat, lon: uld.lon };
+        current.risk += uld.riskScore;
+        current.count += 1;
+        current.delays += uld.phase === "Ground" ? 1 : 0;
+        byAirport.set(uld.airport, current);
+      });
 
-    return [...byAirport.entries()].map(([airport, value]) => ({
-      airport,
-      avgRisk: value.risk / value.count,
-      activeUlds: value.count,
-      delayHotspots: value.delays,
-      lat: value.lat,
-      lon: value.lon,
-    }));
+      return [...byAirport.entries()].map(([airport, value]) => ({
+        airport,
+        avgRisk: value.risk / value.count,
+        activeUlds: value.count,
+        delayHotspots: value.delays,
+        lat: value.lat,
+        lon: value.lon,
+      }));
+    } catch (err) {
+      console.error("[Airports] Summary computation error:", err);
+      return [];
+    }
   }, [ulds]);
 
-  const center = airportSummary[0] ? [airportSummary[0].lat, airportSummary[0].lon] : [25.2532, 55.3657];
+  const center: [number, number] = airportSummary[0] ? [airportSummary[0].lat, airportSummary[0].lon] : [25.2532, 55.3657];
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">

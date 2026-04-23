@@ -1,15 +1,32 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { useAeroStore } from "../store/use-aero-store";
 import { summarizeSystem, riskTone } from "../lib/aero-control";
 import { cn } from "../lib/utils";
 
 export default function DashboardPage() {
   const { alerts, tasks, ulds, queue } = useAeroStore();
-  const stats = useMemo(() => summarizeSystem(ulds, alerts, tasks), [alerts, tasks, ulds]);
-  const highRiskUlds = ulds.filter((u) => u.risk === "HIGH");
-  const openTasks = tasks.filter((t) => t.status !== "Completed");
+
+  const stats = useMemo(() => {
+    try {
+      return summarizeSystem(ulds, alerts, tasks);
+    } catch (err) {
+      console.error("[Dashboard] Stats computation failed:", err);
+      return [];
+    }
+  }, [alerts, tasks, ulds]);
+
+  let highRiskUlds: typeof ulds;
+  let openTasks: typeof tasks;
+  try {
+    highRiskUlds = ulds.filter((u) => u.risk === "HIGH");
+    openTasks = tasks.filter((t) => t.status !== "Completed");
+  } catch (err) {
+    console.error("[Dashboard] Filter error:", err);
+    highRiskUlds = [];
+    openTasks = [];
+  }
 
   return (
     <div className="space-y-4">

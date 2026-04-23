@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 import { MapContainer, TileLayer, CircleMarker, Popup, Circle, Tooltip } from "react-leaflet";
@@ -10,8 +11,13 @@ export default function UldTrackingPage() {
   const [filterRisk, setFilterRisk] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
 
   const filteredUlds = useMemo(() => {
-    if (filterRisk === "ALL") return ulds;
-    return ulds.filter((u) => u.risk === filterRisk);
+    try {
+      if (filterRisk === "ALL") return ulds;
+      return ulds.filter((u) => u.risk === filterRisk);
+    } catch (err) {
+      console.error("[UldTracking] Filter error:", err);
+      return [];
+    }
   }, [ulds, filterRisk]);
 
   const selected = filteredUlds.find((u) => u.id === selectedUldId) || filteredUlds[0];
@@ -45,10 +51,19 @@ export default function UldTrackingPage() {
             ))}
           </div>
 
+          {filteredUlds.length === 0 && (
+            <p className="text-sm text-slate-500 text-center py-6">No ULDs match the current filter.</p>
+          )}
           {filteredUlds.map((uld) => (
             <button
               key={uld.id}
-              onClick={() => setSelectedUldId(uld.id)}
+              onClick={() => {
+                try {
+                  setSelectedUldId(uld.id);
+                } catch (err) {
+                  console.error("[UldTracking] Selection error:", err);
+                }
+              }}
               className={cn(
                 "w-full text-left rounded-lg border p-3 transition-all",
                 selectedUldId === uld.id
