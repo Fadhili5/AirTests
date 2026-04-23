@@ -1,0 +1,38 @@
+{
+  "realm": "or-atm",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "or-atm-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true
+    },
+    {
+      "clientId": "or-atm-dashboard",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "*"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "ops",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ops12345",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

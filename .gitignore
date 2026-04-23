@@ -1,0 +1,6 @@
+node_modules/
+frontend/dist/
+.local-run/
+*.log
+server.out.log
+server.err.log

@@ -1,0 +1,85 @@
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", sans-serif;
+  background: linear-gradient(180deg, #f8f5ef 0%, #ece4d8 100%);
+  color: #1f2937;
+}
+
+.layout {
+  padding: 24px;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin: 0.3rem 0;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #0f766e;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 20px 45px rgba(31, 41, 55, 0.08);
+}
+
+.map-panel .leaflet-container {
+  height: 380px;
+  border-radius: 16px;
+}
+
+.alert-list {
+  display: grid;
+  gap: 10px;
+}
+
+.alert {
+  border-left: 6px solid #0f766e;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.alert.warning {
+  border-left-color: #d97706;
+}
+
+.alert.breach {
+  border-left-color: #dc2626;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #dcfce7;
+}
+
+.badge.warning {
+  background: #fef3c7;
+}
+
+.badge.breach {
+  background: #fee2e2;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,101 @@
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+  graphdb:
+    image: ontotext/graphdb:10.8.4
+    ports:
+      - "7200:7200"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.1
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/or-atm-realm.json:/opt/keycloak/data/import/or-atm-realm.json:ro
+    ports:
+      - "8081:8080"
+
+  ne-one-server:
+    image: ghcr.io/ddoeppner/ne-one-server:latest
+    depends_on:
+      - graphdb
+      - keycloak
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/or-atm
+      GRAPHDB_URL: http://graphdb:7200
+    ports:
+      - "8080:8080"
+
+  backend:
+    build:
+      context: ../backend
+    environment:
+      PORT: 3000
+      MQTT_URL: mqtt://mqtt-broker:1883
+      REDIS_URL: redis://redis:6379
+      KEYCLOAK_ISSUER: http://keycloak:8080/realms/or-atm
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/or-atm/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: or-atm-api
+      ONE_RECORD_BASE_URL: http://ne-one-server:8080
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+    depends_on:
+      - mqtt-broker
+      - redis
+      - keycloak
+      - ne-one-server
+      - mailhog
+    ports:
+      - "3000:3000"
+
+  simulator:
+    build:
+      context: ../simulator
+    environment:
+      MQTT_URL: mqtt://mqtt-broker:1883
+      PUBLISH_INTERVAL_MS: 300000
+      ULD_IDS: JTN-7890,JTN-8972,JTN-4421
+      DEVIATION_PROBABILITY: 0.25
+    depends_on:
+      - mqtt-broker
+
+  frontend:
+    build:
+      context: ../frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    ports:
+      - "3001:3000"
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "8025:8025"
+      - "1025:1025"

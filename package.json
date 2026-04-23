@@ -1,0 +1,24 @@
+{
+  "name": "or-atm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Production-style ONE Record Ambient Temperature Monitor platform",
+  "workspaces": [
+    "broker",
+    "backend",
+    "frontend",
+    "simulator"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "dev:broker": "npm --workspace broker run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:simulator": "npm --workspace simulator run dev",
+    "test": "npm --workspace backend test",
+    "build": "npm --workspace frontend run build"
+  },
+  "engines": {
+    "node": ">=20.12.0"
+  }
+}

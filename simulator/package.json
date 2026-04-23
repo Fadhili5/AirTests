@@ -1,0 +1,14 @@
+{
+  "name": "simulator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "dev:local": "node src/index.js",
+    "load": "node src/load-test.js"
+  },
+  "dependencies": {
+    "mqtt": "^5.10.4"
+  }
+}

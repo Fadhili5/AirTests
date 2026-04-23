@@ -1,0 +1,12 @@
+{
+  "name": "broker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "aedes": "^0.51.3"
+  }
+}
