@@ -22,13 +22,13 @@ export async function initAuth() {
     localStorage.setItem("or_atm_token", keycloak.token);
   }
 
-  setInterval(async () => {
+  window.setInterval(async () => {
     try {
       await keycloak.updateToken(30);
       if (keycloak.token) {
         localStorage.setItem("or_atm_token", keycloak.token);
       }
-    } catch (_error) {
+    } catch {
       keycloak.login();
     }
   }, 20000);

@@ -13,13 +13,30 @@ The repository includes:
 - `risk-service/`
   FastAPI microservice for predictive risk scoring.
 - `frontend/`
-  React/Vite control center with live map, alerts, workflow panel, action timeline, and compliance analytics.
+  React + TypeScript + Vite operations client with a tablet-first cargo control shell, Tailwind-based design system, Zustand offline store, service-worker registration, live map, exposure intelligence cards, intervention tasks, incidents, inventory, and assistant workflows.
 - `simulator/`
   Multi-ULD simulator with heatwave, delay, and sensor-failure scenarios.
 - `broker/`
   Local Aedes MQTT broker for no-Docker development.
 - `infra/`
   Docker Compose stack for Mosquitto, Redis, PostgreSQL, Keycloak, GraphDB, NE:ONE, Prometheus, Grafana, MailHog, and the risk service.
+
+## UI Layout
+
+The frontend is now structured as a tablet-first operational web app for cargo exposure control instead of a single desktop dashboard.
+
+- Top bar:
+  mission title, flight context, and offline/sync indicator
+- Main body:
+  three-panel operational layout with cargo operations, live exposure intelligence, and alerts/action control
+- Bottom navigation:
+  `Dashboard | ULDs | Inventory | Incidents | Tasks | AI`
+- Tablet-first interaction model:
+  touch-friendly cards, large action targets, dense but readable spacing, and stable panel structure
+- Offline-first behavior:
+  queued actions, pending sync drawer, service worker registration, and automatic sync when connectivity returns
+- Real-time behavior:
+  Socket.IO updates pulse only the changed cards instead of shifting the full layout
 
 ## Core Capabilities
 
@@ -32,6 +49,8 @@ The repository includes:
 - Alerting over webhook and email channels
 - ONE Record digital twin extensions for risk, compliance, and mitigation history
 - Live React operations dashboard with Socket.IO updates
+- Offline-first operational UI with local queue visibility and sync recovery
+- Tablet-first modular screens for ULD exposure, interventions, incidents, inventory, and assistant workflows
 
 ## Local Run
 
@@ -143,6 +162,12 @@ Build the frontend:
 
 ```bash
 npm --workspace frontend run build
+```
+
+Run frontend type checking:
+
+```bash
+npm --workspace frontend run typecheck
 ```
 
 ## Demo Scenarios
