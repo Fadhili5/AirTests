@@ -26,8 +26,8 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
-      <div className="space-y-3 md:space-y-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
+      <div className="space-y-4 lg:col-span-2 lg:space-y-6">
         {/* Filters - tablet-first responsive */}
         <Card>
           <CardHeader>
@@ -37,16 +37,16 @@ export default function AlertsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2">
               {["ALL", "HIGH", "MEDIUM", "LOW"].map((level) => (
                 <button
                   key={level}
                   onClick={() => setSeverityFilter(level as any)}
                   className={cn(
-                    "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                    "rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors",
                     severityFilter === level
-                      ? "bg-cyan-400/15 text-cyan-200 border border-cyan-400/20"
-                      : "text-slate-400 hover:bg-white/5 border border-transparent"
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
                   )}
                 >
                   {level}
@@ -69,22 +69,24 @@ export default function AlertsPage() {
               <div
                 key={alert.id}
                 className={cn(
-                  "rounded-lg border p-3 transition-all",
-                  flashes[`alert:${alert.id}`] ? "ring-1 ring-cyan-400/30 border-cyan-400/20" : "border-white/5 bg-white/[0.03]"
+                  "rounded-2xl border p-4 transition-all",
+                  flashes[`alert:${alert.id}`]
+                    ? "border-blue-200 bg-blue-50 ring-1 ring-blue-100"
+                    : "border-slate-200 bg-slate-50 hover:bg-white"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">{alert.title}</p>
+                    <p className="text-sm font-medium text-slate-900">{alert.title}</p>
                     <p className="text-xs text-slate-500">{new Date(alert.timestamp).toLocaleTimeString()}</p>
                   </div>
                   <SeverityBadge level={alert.level} />
                 </div>
-                <p className="text-xs text-slate-400 mt-1">{alert.detail}</p>
+                <p className="mt-1 text-xs text-slate-600">{alert.detail}</p>
                 {!acknowledged.has(alert.id) && (
                   <button
                     onClick={() => handleAcknowledge(alert.id)}
-                    className="mt-2 w-full rounded-lg bg-cyan-400/15 text-cyan-300 border border-cyan-400/20 py-1.5 text-xs hover:bg-cyan-400/25 transition-colors"
+                    className="mt-3 w-full rounded-xl border border-blue-200 bg-blue-50 py-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
                   >
                     Acknowledge
                   </button>
@@ -108,16 +110,16 @@ export default function AlertsPage() {
             <div key={item.id} className="flex gap-3">
               <span className={cn(
                 "mt-1 h-2 w-2 shrink-0 rounded-full",
-                item.type === "Alert" && "bg-rose-400",
-                item.type === "Acknowledged" && "bg-cyan-400",
-                item.type === "Assigned" && "bg-amber-400"
+                item.type === "Alert" && "bg-rose-600",
+                item.type === "Acknowledged" && "bg-blue-600",
+                item.type === "Assigned" && "bg-amber-600"
               )} />
               <div>
                 <div className="flex items-center gap-2">
-                  <strong className="text-sm">{item.type}</strong>
+                  <strong className="text-sm text-slate-900">{item.type}</strong>
                   <span className="text-[10px] text-slate-500">{new Date(item.timestamp).toLocaleTimeString()}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">{item.detail}</p>
+                <p className="mt-0.5 text-xs text-slate-600">{item.detail}</p>
               </div>
             </div>
           ))}
@@ -134,15 +136,15 @@ function FilterBadge({ label, count, active, onClick, tone }: { label: string; c
       className={cn(
         "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs border transition-all",
         active
-          ? "bg-cyan-400/15 border-cyan-400/30 text-cyan-200"
-          : "border-white/5 text-slate-400 hover:bg-white/5"
+          ? "border-blue-200 bg-blue-50 text-blue-700"
+          : "border-slate-200 text-slate-600 hover:bg-slate-50"
       )}
     >
       <span className={cn(
         "h-1.5 w-1.5 rounded-full",
-        tone === "danger" && "bg-rose-400",
-        tone === "warn" && "bg-amber-400",
-        tone === "good" && "bg-emerald-400",
+        tone === "danger" && "bg-rose-600",
+        tone === "warn" && "bg-amber-600",
+        tone === "good" && "bg-emerald-600",
         !tone && "bg-slate-400"
       )} />
       {label} <span className="text-slate-500">({count})</span>
@@ -154,9 +156,9 @@ function SeverityBadge({ level }: { level: string }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      level === "HIGH" && "bg-rose-400/15 text-rose-300",
-      level === "MEDIUM" && "bg-amber-400/15 text-amber-300",
-      level === "LOW" && "bg-emerald-400/15 text-emerald-300"
+      level === "HIGH" && "bg-rose-50 text-rose-700",
+      level === "MEDIUM" && "bg-amber-50 text-amber-700",
+      level === "LOW" && "bg-emerald-50 text-emerald-700"
     )}>
       {level}
     </span>
@@ -167,9 +169,9 @@ function RiskBadge({ risk }: { risk: string }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      risk === "HIGH" && "bg-rose-400/15 text-rose-300",
-      risk === "MEDIUM" && "bg-amber-400/15 text-amber-300",
-      risk === "LOW" && "bg-emerald-400/15 text-emerald-300"
+      risk === "HIGH" && "bg-rose-50 text-rose-700",
+      risk === "MEDIUM" && "bg-amber-50 text-amber-700",
+      risk === "LOW" && "bg-emerald-50 text-emerald-700"
     )}>
       {risk}
     </span>

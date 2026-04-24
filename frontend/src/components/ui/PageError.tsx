@@ -11,24 +11,24 @@ export function PageError({
 }) {
   return (
     <div className="flex h-full min-h-[50vh] items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border border-rose-400/20 bg-[#0c1522] p-6 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-400/15">
-          <AlertIcon className="h-6 w-6 text-rose-400" />
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50">
+          <AlertIcon className="h-6 w-6 text-rose-600" />
         </div>
-        <h3 className="text-base font-semibold text-slate-100">{title}</h3>
-        <p className="mt-2 text-sm text-slate-400">{message}</p>
+        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+        <p className="mt-2 text-sm text-slate-600">{message}</p>
         <div className="mt-4 flex items-center justify-center gap-3">
           {onRetry && (
             <button
               onClick={onRetry}
-              className="rounded-lg bg-cyan-400/15 px-4 py-2 text-sm font-medium text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/25 transition-colors"
+              className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
             >
               Retry
             </button>
           )}
           <button
             onClick={() => window.location.reload()}
-            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
           >
             Reload App
           </button>

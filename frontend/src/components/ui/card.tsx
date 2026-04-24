@@ -12,7 +12,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/10 bg-[#0c1522]",
+        "glass-surface overflow-hidden rounded-2xl border border-slate-200 bg-white/70 shadow-sm",
         className
       )}
     >
@@ -29,7 +29,7 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 px-4 py-3 border-b border-white/5", className)}>
+    <div className={cn("flex items-start justify-between gap-4 border-b border-slate-200/80 px-5 py-4", className)}>
       {children}
     </div>
   );
@@ -40,7 +40,7 @@ export function CardTitle({
 }: {
   children: React.ReactNode;
 }) {
-  return <h3 className="text-sm font-semibold">{children}</h3>;
+  return <h3 className="text-sm font-semibold text-slate-900">{children}</h3>;
 }
 
 export function CardDescription({
@@ -48,7 +48,7 @@ export function CardDescription({
 }: {
   children: React.ReactNode;
 }) {
-  return <p className="text-xs text-slate-500 mt-0.5">{children}</p>;
+  return <p className="mt-0.5 text-xs text-slate-600">{children}</p>;
 }
 
 export function CardContent({
@@ -58,7 +58,7 @@ export function CardContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("p-4", className)}>{children}</div>;
+  return <div className={cn("p-5", className)}>{children}</div>;
 }
 
 // shadcn/ui card (available as ShadcnCard)

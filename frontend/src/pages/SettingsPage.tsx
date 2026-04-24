@@ -6,9 +6,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("thresholds");
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Settings Tabs */}
-      <div className="flex gap-2 border-b border-white/10 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         {[
           { id: "thresholds", label: "Risk Thresholds" },
           { id: "roles", label: "User Roles" },
@@ -18,10 +18,10 @@ export default function SettingsPage() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "px-4 py-2 text-sm rounded-lg transition-colors",
+              "rounded-xl border px-4 py-2 text-sm transition-colors",
               activeTab === tab.id
-                ? "bg-cyan-400/15 text-cyan-200 border border-cyan-400/20"
-                : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                ? "border-blue-200 bg-blue-50 text-blue-700"
+                : "border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
             )}
           >
             {tab.label}
@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
 function ThresholdSettings() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
       <SettingGroup
         title="Temperature Thresholds"
         description="Thermal breach and warning levels"
@@ -75,7 +75,7 @@ function ThresholdSettings() {
 
 function RoleSettings() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
       <SettingGroup
         title="Role Definitions"
         description="Active user roles and permissions"
@@ -102,7 +102,7 @@ function RoleSettings() {
 
 function ApiSettings() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
       <SettingGroup
         title="Connection Status"
         description="Live feed and ingestion status"
@@ -159,18 +159,18 @@ function SettingGroup({
           <div
             key={setting.label}
             className={cn(
-              "flex items-center justify-between rounded-lg border p-3",
+              "flex items-center justify-between rounded-2xl border p-4 transition-colors",
               setting.editable
-                ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.05] cursor-pointer"
-                : "border-white/5 bg-white/[0.02]"
+                ? "cursor-pointer border-slate-200 bg-slate-50 hover:bg-white"
+                : "border-slate-200 bg-white"
             )}
           >
-            <span className="text-sm text-slate-300">{setting.label}</span>
+            <span className="text-sm text-slate-700">{setting.label}</span>
             <span className={cn(
               "text-sm",
               setting.value === "Enabled" || setting.value === "Connected" || setting.value === "Online"
-                ? "text-emerald-400"
-                : "text-slate-400"
+                ? "text-emerald-700"
+                : "text-slate-500"
             )}>
               {setting.value}
             </span>

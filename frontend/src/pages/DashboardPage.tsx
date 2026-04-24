@@ -37,25 +37,25 @@ export default function DashboardPage() {
   }, [ulds]);
 
   return (
-    <div className="space-y-3 md:space-y-4">
+    <div className="space-y-4 md:space-y-6">
       {/* KPI Overview - tablet-first responsive */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((item) => (
           <Card key={item.label}>
-            <CardContent className="p-3">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] uppercase tracking-wider text-slate-500">{item.label}</span>
                 <StatusDot tone={item.tone} />
               </div>
-              <p className="text-2xl font-semibold mt-1">{item.value}</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-900">{item.value}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* Left Column */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:col-span-2 lg:space-y-6">
           {/* System Status Snapshot */}
           <Card>
             <CardHeader>
@@ -65,12 +65,12 @@ export default function DashboardPage() {
               </div>
               <span className={cn(
                 "text-[10px] px-2 py-1 rounded-full font-medium",
-                queue.length > 0 ? "bg-amber-400/15 text-amber-300" : "bg-emerald-400/15 text-emerald-300"
+                queue.length > 0 ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
               )}>
                 {queue.length > 0 ? `${queue.length} queued` : "Stable"}
               </span>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-3">
+            <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <StatusTile label="Realtime Feed" value="Connected" tone="good" />
               <StatusTile label="High Risk ULDs" value={String(highRiskUlds.length)} tone={highRiskUlds.length > 0 ? "danger" : "good"} />
               <StatusTile label="Actioning Load" value={String(openTasks.length)} tone={openTasks.length > 0 ? "warn" : "good"} />
@@ -86,7 +86,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <RiskSummaryTile label="High Risk" count={riskCounts.high} tone="danger" />
                 <RiskSummaryTile label="Medium Risk" count={riskCounts.medium} tone="warn" />
                 <RiskSummaryTile label="Low Risk" count={riskCounts.low} tone="good" />
@@ -104,24 +104,24 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {[
                   { path: "/flights", label: "Flights", icon: "FL" },
-                  { path: "/uld-tracking", label: "ULD Tracking", icon: "📍" },
-                  { path: "/exposure", label: "Exposure", icon: "🌡️" },
-                  { path: "/alerts", label: "Alerts", icon: "🔔" },
-                  { path: "/interventions", label: "Interventions", icon: "📋" },
-                  { path: "/airports", label: "Airports", icon: "✈️" },
-                  { path: "/analytics", label: "Analytics", icon: "📊" },
-                  { path: "/settings", label: "Settings", icon: "⚙️" },
+                  { path: "/uld-tracking", label: "ULD Tracking", icon: "UL" },
+                  { path: "/exposure", label: "Exposure", icon: "EX" },
+                  { path: "/alerts", label: "Alerts", icon: "AL" },
+                  { path: "/interventions", label: "Interventions", icon: "IN" },
+                  { path: "/airports", label: "Airports", icon: "AP" },
+                  { path: "/analytics", label: "Analytics", icon: "AN" },
+                  { path: "/settings", label: "Settings", icon: "ST" },
                 ].map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className="rounded-lg border border-white/5 bg-white/[0.03] p-3 text-center hover:bg-white/[0.06] transition-colors"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition-colors hover:bg-slate-50"
                   >
-                    <span className="text-xl">{item.icon}</span>
-                    <p className="text-xs text-slate-300 mt-1">{item.label}</p>
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-sm font-semibold text-blue-700">{item.icon}</span>
+                    <p className="mt-3 text-sm font-medium text-slate-900">{item.label}</p>
                   </Link>
                 ))}
               </div>
@@ -130,14 +130,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Column — Alerts Summary */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-6">
           <Card className="h-full">
             <CardHeader>
               <div>
                 <CardTitle>Active Alerts Summary</CardTitle>
                 <CardDescription>Latest risk events requiring attention.</CardDescription>
               </div>
-              <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-slate-400">
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600">
                 {alerts.length} total
               </span>
             </CardHeader>
@@ -145,18 +145,18 @@ export default function DashboardPage() {
               {alerts.slice(0, 8).map((alert) => (
                 <div
                   key={alert.id}
-                  className="rounded-lg border border-white/5 bg-white/[0.03] p-3"
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-white"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{alert.uldId}</span>
+                    <span className="text-sm font-medium text-slate-900">{alert.uldId}</span>
                     <RiskBadge risk={alert.level} />
                   </div>
-                  <p className="text-sm text-slate-300 mt-1">{alert.title}</p>
-                  <p className="text-xs text-slate-500 mt-1">{new Date(alert.timestamp).toLocaleTimeString()}</p>
+                  <p className="mt-1 text-sm text-slate-700">{alert.title}</p>
+                  <p className="mt-1 text-xs text-slate-500">{new Date(alert.timestamp).toLocaleTimeString()}</p>
                 </div>
               ))}
               {alerts.length === 0 && (
-                <p className="text-sm text-slate-500 text-center py-8">No active alerts.</p>
+                <p className="py-8 text-center text-sm text-slate-500">No active alerts.</p>
               )}
             </CardContent>
           </Card>
@@ -168,11 +168,11 @@ export default function DashboardPage() {
 
 function StatusTile({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
       <div className="flex items-center gap-2 mt-2">
         <StatusDot tone={tone} />
-        <strong className="text-lg">{value}</strong>
+        <strong className="text-lg text-slate-900">{value}</strong>
       </div>
     </div>
   );
@@ -182,9 +182,9 @@ function StatusDot({ tone }: { tone: string }) {
   return (
     <span className={cn(
       "h-2 w-2 rounded-full",
-      tone === "good" && "bg-emerald-400",
-      tone === "warn" && "bg-amber-400",
-      tone === "danger" && "bg-rose-400",
+      tone === "good" && "bg-emerald-600",
+      tone === "warn" && "bg-amber-600",
+      tone === "danger" && "bg-rose-600",
       tone === "default" && "bg-slate-400"
     )} />
   );
@@ -192,14 +192,14 @@ function StatusDot({ tone }: { tone: string }) {
 
 function RiskSummaryTile({ label, count, tone }: { label: string; count: number; tone: string }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-white/[0.03] p-3 text-center">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
       <p className={cn(
         "text-2xl font-semibold mt-1",
-        tone === "danger" && "text-rose-400",
-        tone === "warn" && "text-amber-400",
-        tone === "good" && "text-emerald-400",
-        tone === "default" && "text-slate-300"
+        tone === "danger" && "text-rose-600",
+        tone === "warn" && "text-amber-600",
+        tone === "good" && "text-emerald-600",
+        tone === "default" && "text-slate-700"
       )}>
         {count}
       </p>
@@ -211,9 +211,9 @@ function RiskBadge({ risk }: { risk: string }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      risk === "HIGH" && "bg-rose-400/15 text-rose-300",
-      risk === "MEDIUM" && "bg-amber-400/15 text-amber-300",
-      risk === "LOW" && "bg-emerald-400/15 text-emerald-300"
+      risk === "HIGH" && "bg-rose-50 text-rose-700",
+      risk === "MEDIUM" && "bg-amber-50 text-amber-700",
+      risk === "LOW" && "bg-emerald-50 text-emerald-700"
     )}>
       {risk}
     </span>

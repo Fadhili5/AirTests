@@ -17,16 +17,16 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 function RouteErrorFallback({ name }: { name: string }) {
   return (
     <div className="flex h-full min-h-[50vh] items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-xl border border-rose-400/20 bg-[#0c1522] p-6 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-400/15">
-          <span className="text-rose-400 text-lg font-bold">!</span>
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50">
+          <span className="text-lg font-bold text-rose-600">!</span>
         </div>
-        <h3 className="text-base font-semibold text-slate-100">{name} Error</h3>
-        <p className="mt-2 text-sm text-slate-400">This module failed to load. Please try again or reload the application.</p>
+        <h3 className="text-base font-semibold text-slate-900">{name} Error</h3>
+        <p className="mt-2 text-sm text-slate-600">This module failed to load. Please try again or reload the application.</p>
         <div className="mt-4 flex items-center justify-center gap-3">
           <button
             onClick={() => window.location.reload()}
-            className="rounded-lg bg-cyan-400/15 px-4 py-2 text-sm font-medium text-cyan-300 border border-cyan-400/20 hover:bg-cyan-400/25 transition-colors"
+            className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100"
           >
             Reload App
           </button>
@@ -44,7 +44,7 @@ export function App() {
           <Suspense
             fallback={
               <div className="flex h-full items-center justify-center">
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-slate-300">
+                <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm text-slate-600 shadow-sm">
                   Loading AeroSentinel module…
                 </div>
               </div>

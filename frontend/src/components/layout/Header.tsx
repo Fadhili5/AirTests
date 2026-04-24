@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import { cn } from "../../lib/utils";
 import { routeMeta } from "../../lib/aero-control";
 
 export function Header({
@@ -16,44 +14,44 @@ export function Header({
   const [current] = routeMeta(currentPath);
 
   return (
-    <header className="border-b border-white/10 bg-[#060f1c]/80 backdrop-blur-md px-4 py-3">
+    <header className="glass-surface-strong border-b border-slate-200/80 bg-slate-50/75 px-4 py-4 md:px-5 lg:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {/* Mobile Menu Toggle */}
           <button
             onClick={onMenuToggle}
-            className="md:hidden rounded-lg border border-white/10 bg-white/5 p-2 text-slate-400 hover:text-slate-200"
+            className="rounded-xl border border-slate-200/80 bg-white/70 p-2 text-slate-600 transition-colors hover:bg-white hover:text-slate-900 md:hidden"
           >
             <MenuIcon />
           </button>
 
           <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-200/70">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600">
               {current?.eyebrow || "Overview"}
             </p>
-            <h2 className="text-base font-semibold">{current?.title || "AeroSentinel"}</h2>
+            <h2 className="text-base font-semibold text-slate-900">{current?.title || "AeroSentinel"}</h2>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+          <span className="hidden items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1.5 text-xs text-slate-700 shadow-sm sm:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
             Flight EK202 / B777F
           </span>
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="hidden items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/85 px-3 py-1.5 text-xs text-emerald-700 sm:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Realtime Active
           </span>
           <button
             onClick={onSyncClick}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition-colors"
+            className="rounded-xl border border-blue-200/80 bg-blue-50/85 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
           >
             Queue {queueLength}
           </button>
         </div>
       </div>
       {current?.description && (
-        <p className="mt-1 text-xs text-slate-500">{current.description}</p>
+        <p className="mt-1 text-xs text-slate-600">{current.description}</p>
       )}
     </header>
   );

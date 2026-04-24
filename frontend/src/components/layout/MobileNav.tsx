@@ -15,7 +15,7 @@ const MOBILE_ITEMS = [
 
 export function MobileNav({ currentPath }: { currentPath: string }) {
   return (
-    <nav className="md:hidden grid grid-cols-4 gap-1 border-t border-white/10 bg-[#060f1c] p-2">
+    <nav className="grid grid-cols-4 gap-1 border-t border-slate-200 bg-slate-50 p-2 md:hidden">
       {MOBILE_ITEMS.map((item) => {
         const active = currentPath === item.path;
         return (
@@ -24,10 +24,10 @@ export function MobileNav({ currentPath }: { currentPath: string }) {
             to={item.path}
             className={cn(
               "flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium transition-colors",
-              active ? "bg-cyan-400/15 text-cyan-200" : "text-slate-500"
+              active ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-100"
             )}
           >
-            <item.icon className={cn("w-5 h-5", active ? "text-cyan-300" : "text-slate-600")} />
+            <item.icon className={cn("h-5 w-5", active ? "text-blue-600" : "text-slate-400")} />
             {item.label}
           </Link>
         );

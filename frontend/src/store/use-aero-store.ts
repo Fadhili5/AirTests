@@ -14,6 +14,7 @@ import type {
 } from "../types";
 
 interface AeroState {
+  now: number;
   activeTab: AppTab;
   syncStatus: SyncStatus;
   syncDrawerOpen: boolean;
@@ -33,6 +34,7 @@ interface AeroState {
   timeline: TimelineEvent[];
   analyticsHistory: AnalyticsPoint[];
   assistantMessages: { id: string; role: "assistant" | "user"; text: string }[];
+  tickClock: (timestamp?: number) => void;
   setActiveTab: (tab: AppTab) => void;
   selectUld: (id: string) => void;
   setSyncStatus: (status: SyncStatus) => void;
@@ -71,6 +73,7 @@ function saveQueueToStorage(queue: QueueItem[]) {
 }
 
 export const useAeroStore = create<AeroState>((set, get) => ({
+  now: Date.now(),
   activeTab: "dashboard",
   syncStatus: navigator.onLine ? "online" : "offline",
   syncDrawerOpen: false,
@@ -355,6 +358,7 @@ export const useAeroStore = create<AeroState>((set, get) => ({
     },
   ],
   analyticsHistory: buildAnalyticsHistorySeed(),
+  tickClock: (timestamp) => set({ now: timestamp ?? Date.now() }),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectUld: (selectedUldId) => set({ selectedUldId }),
   setSyncStatus: (syncStatus) => set({ syncStatus }),

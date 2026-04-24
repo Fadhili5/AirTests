@@ -43,9 +43,9 @@ export default function AirportsPage() {
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
       {/* Map - tablet-first responsive */}
-      <Card className="min-h-[350px] md:min-h-[400px]">
+      <Card className="min-h-[350px] md:min-h-[400px] lg:col-span-2">
         <CardHeader>
           <div>
             <CardTitle>Airport Risk Zones</CardTitle>
@@ -53,7 +53,7 @@ export default function AirportsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px] w-full rounded-lg overflow-hidden md:h-[380px]">
+          <div className="h-[320px] w-full overflow-hidden rounded-2xl border border-slate-200 md:h-[380px]">
             <MapContainer
               center={[25, 10]}
               zoom={2}
@@ -70,8 +70,8 @@ export default function AirportsPage() {
                   center={[airport.lat, airport.lon]}
                   radius={14 + (airport.avgRiskScore * 18)}
                   pathOptions={{
-                    color: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
-                    fillColor: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
+                    color: airport.avgRiskScore > 0.7 ? "#DC2626" : airport.avgRiskScore > 0.4 ? "#CA8A04" : "#16A34A",
+                    fillColor: airport.avgRiskScore > 0.7 ? "#DC2626" : airport.avgRiskScore > 0.4 ? "#CA8A04" : "#16A34A",
                     fillOpacity: 0.6,
                   }}
                 >
@@ -97,20 +97,20 @@ export default function AirportsPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {airportSummary.map((ap) => (
-            <div key={ap.airport} className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
+            <div key={ap.airport} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
-                <strong className="text-sm">{ap.airport}</strong>
+                <strong className="text-sm text-slate-900">{ap.airport}</strong>
                 <RiskScore score={ap.avgRisk} />
               </div>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-slate-400">
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
                 <span>Active ULDs</span>
-                <span className="text-slate-200">{ap.activeUlds}</span>
+                <span className="text-slate-900">{ap.activeUlds}</span>
                 <span>Delay Hotspots</span>
-                <span className={ap.delayHotspots > 0 ? "text-amber-400" : "text-emerald-400"}>
+                <span className={ap.delayHotspots > 0 ? "text-amber-700" : "text-emerald-700"}>
                   {ap.delayHotspots}
                 </span>
                 <span>Avg Risk Score</span>
-                <span className={ap.avgRisk >= 0.75 ? "text-rose-400" : ap.avgRisk >= 0.5 ? "text-amber-400" : "text-emerald-400"}>
+                <span className={ap.avgRisk >= 0.75 ? "text-rose-700" : ap.avgRisk >= 0.5 ? "text-amber-700" : "text-emerald-700"}>
                   {ap.avgRisk.toFixed(2)}
                 </span>
               </div>
@@ -126,9 +126,9 @@ function RiskScore({ score }: { score: number }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      score >= 0.75 && "bg-rose-400/15 text-rose-300",
-      score >= 0.5 && score < 0.75 && "bg-amber-400/15 text-amber-300",
-      score < 0.5 && "bg-emerald-400/15 text-emerald-300"
+      score >= 0.75 && "bg-rose-50 text-rose-700",
+      score >= 0.5 && score < 0.75 && "bg-amber-50 text-amber-700",
+      score < 0.5 && "bg-emerald-50 text-emerald-700"
     )}>
       {score.toFixed(2)}
     </span>

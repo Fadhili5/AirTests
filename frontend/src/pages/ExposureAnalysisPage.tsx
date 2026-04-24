@@ -26,9 +26,9 @@ export default function ExposureAnalysisPage() {
   }, [selected]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
       {/* Chart - tablet-first responsive */}
-      <Card className="min-h-[320px] md:min-h-[360px]">
+      <Card className="min-h-[320px] md:min-h-[360px] lg:col-span-2">
         <CardHeader>
           <div>
             <CardTitle>Exposure Analysis</CardTitle>
@@ -40,34 +40,34 @@ export default function ExposureAnalysisPage() {
             {chartData.length > 0 && (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                   <XAxis 
                     dataKey="phase" 
-                    tick={{ fill: "#94a3b8", fontSize: 10 }}
-                    stroke="rgba(148,163,184,0.08)"
+                    tick={{ fill: "#475569", fontSize: 10 }}
+                    stroke="#CBD5E1"
                   />
                   <YAxis 
-                    tick={{ fill: "#94a3b8", fontSize: 10 }}
-                    stroke="rgba(148,163,184,0.08)"
+                    tick={{ fill: "#475569", fontSize: 10 }}
+                    stroke="#CBD5E1"
                   />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: "rgba(15, 29, 49, 0.9)", border: "1px solid rgba(148,163,184,0.2)" }}
-                    itemStyle={{ color: "#cbd5e1" }}
+                    contentStyle={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "12px" }}
+                    itemStyle={{ color: "#0F172A" }}
                   />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
                   <Line 
                     type="monotone" 
                     dataKey="exposure" 
-                    stroke="#3bd8d0" 
+                    stroke="#2563EB" 
                     strokeWidth={2}
-                    dot={{ fill: "#3bd8d0" }}
+                    dot={{ fill: "#2563EB" }}
                     activeDot={{ r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             )}
             {chartData.length === 0 && (
-              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-white/10 text-sm text-slate-400">
+              <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-300 text-sm text-slate-500">
                 No exposure data available yet.
               </div>
             )}
@@ -85,27 +85,27 @@ export default function ExposureAnalysisPage() {
         </CardHeader>
         <CardContent className="space-y-2">
           {ulds.map((uld) => (
-            <div key={uld.id} className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
+            <div key={uld.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
-                <strong className="text-sm">{uld.id}</strong>
-                <span className="text-sm text-slate-300">{uld.exposureScore}/100</span>
+                <strong className="text-sm text-slate-900">{uld.id}</strong>
+                <span className="text-sm text-slate-700">{uld.exposureScore}/100</span>
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span className={cn(
                   "text-[10px] font-medium px-2 py-0.5 rounded-full",
-                  uld.trend === "Rising" && "bg-rose-400/15 text-rose-300",
-                  uld.trend === "Stable" && "bg-amber-400/15 text-amber-300",
-                  uld.trend === "Recovering" && "bg-emerald-400/15 text-emerald-300"
+                  uld.trend === "Rising" && "bg-rose-50 text-rose-700",
+                  uld.trend === "Stable" && "bg-amber-50 text-amber-700",
+                  uld.trend === "Recovering" && "bg-emerald-50 text-emerald-700"
                 )}>
                   {uld.trend}
                 </span>
-                <span className="text-xs text-slate-400">{uld.status}</span>
+                <span className="text-xs text-slate-600">{uld.status}</span>
               </div>
-              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
                 <div
                   className={cn(
                     "h-full rounded-full",
-                    uld.exposureScore >= 80 ? "bg-rose-400" : uld.exposureScore >= 50 ? "bg-amber-400" : "bg-emerald-400"
+                    uld.exposureScore >= 80 ? "bg-rose-600" : uld.exposureScore >= 50 ? "bg-amber-600" : "bg-emerald-600"
                   )}
                   style={{ width: `${uld.exposureScore}%` }}
                 />
@@ -123,10 +123,10 @@ function ProgressBar({ label, value, max, color }: { label: string; value: numbe
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-400">{label}</span>
-        <span className="text-slate-300">{value} min</span>
+        <span className="text-slate-600">{label}</span>
+        <span className="text-slate-700">{value} min</span>
       </div>
-      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -138,9 +138,9 @@ function ProgressBar({ label, value, max, color }: { label: string; value: numbe
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-white/[0.03] p-3">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="text-sm text-slate-200 mt-1">{value}</p>
+      <p className="mt-1 text-sm text-slate-900">{value}</p>
     </div>
   );
 }
@@ -149,9 +149,9 @@ function RiskBadge({ risk }: { risk: string }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      risk === "HIGH" && "bg-rose-400/15 text-rose-300",
-      risk === "MEDIUM" && "bg-amber-400/15 text-amber-300",
-      risk === "LOW" && "bg-emerald-400/15 text-emerald-300"
+      risk === "HIGH" && "bg-rose-50 text-rose-700",
+      risk === "MEDIUM" && "bg-amber-50 text-amber-700",
+      risk === "LOW" && "bg-emerald-50 text-emerald-700"
     )}>
       {risk}
     </span>

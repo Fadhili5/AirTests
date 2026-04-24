@@ -31,20 +31,20 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col border-r border-white/10 bg-[#060f1c] transition-all duration-300",
+        "glass-surface-strong hidden md:flex flex-col border-r border-slate-200/80 bg-slate-50/72 transition-all duration-300",
         collapsed ? "w-[72px]" : "w-[260px]",
         "lg:w-[280px]"
       )}
     >
       {/* Brand */}
-      <div className="p-4 border-b border-white/10">
+      <div className="border-b border-slate-200/80 p-4">
         <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/20 text-cyan-300">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50/90 text-blue-700 ring-1 ring-blue-200/80">
             <span className="text-sm font-bold">AX</span>
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-sm font-semibold leading-tight">AeroSentinel</h1>
+              <h1 className="text-sm font-semibold leading-tight text-slate-900">AeroSentinel</h1>
               <p className="text-[10px] uppercase tracking-wider text-slate-500">Cargo Control</p>
             </div>
           )}
@@ -52,7 +52,7 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-auto p-3 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-auto p-3">
         {NAV_ITEMS.map((item) => {
           const active = currentPath === item.path;
           return (
@@ -62,13 +62,13 @@ export function Sidebar({
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
                 active
-                  ? "bg-cyan-400/15 text-cyan-100 border border-cyan-400/20"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent",
+                  ? "border border-blue-200/80 bg-blue-50/85 text-blue-700"
+                  : "border border-transparent text-slate-600 hover:bg-white/55 hover:text-slate-900",
                 collapsed && "justify-center px-2"
               )}
               title={collapsed ? item.label : undefined}
             >
-              <item.icon className={cn("shrink-0", active ? "text-cyan-300" : "text-slate-500")} />
+              <item.icon className={cn("shrink-0", active ? "text-blue-600" : "text-slate-400")} />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
@@ -76,12 +76,12 @@ export function Sidebar({
       </nav>
 
       {/* Bottom Section */}
-      <div className="p-3 border-t border-white/10 space-y-2">
+      <div className="space-y-2 border-t border-slate-200/80 p-3">
         {/* Collapse Toggle */}
         <button
           onClick={onToggle}
           className={cn(
-            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-colors",
+            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs text-slate-500 transition-colors hover:bg-white/55 hover:text-slate-900",
             collapsed && "justify-center"
           )}
         >
@@ -93,21 +93,21 @@ export function Sidebar({
 
         {/* Sync Status */}
         {!collapsed && (
-          <div className="rounded-xl border border-white/5 bg-white/[0.03] p-3 space-y-2">
+          <div className="glass-surface space-y-2 rounded-2xl border border-slate-200/80 bg-white/68 p-3 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase tracking-wider text-slate-500">Sync</span>
               <span className={cn(
                 "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                syncStatus === "online" && "bg-emerald-400/15 text-emerald-300",
-                syncStatus === "syncing" && "bg-amber-400/15 text-amber-300",
-                syncStatus === "offline" && "bg-rose-400/15 text-rose-300"
+                syncStatus === "online" && "bg-emerald-50 text-emerald-700",
+                syncStatus === "syncing" && "bg-amber-50 text-amber-700",
+                syncStatus === "offline" && "bg-rose-50 text-rose-700"
               )}>
                 {syncStatus}
               </span>
             </div>
             <button
               onClick={onSyncClick}
-              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs hover:bg-white/10 transition-colors"
+              className="w-full rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-white"
             >
               Pending {queueLength > 0 ? `(${queueLength})` : "0"}
             </button>

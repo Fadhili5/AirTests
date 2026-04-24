@@ -33,9 +33,9 @@ export default function UldTrackingPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
       {/* Map - tablet-first responsive */}
-      <Card className="flex flex-col min-h-[350px] md:min-h-[400px]">
+      <Card className="flex min-h-[350px] flex-col md:min-h-[400px] lg:col-span-2">
         <CardHeader>
           <div>
             <CardTitle>Live ULD Tracking</CardTitle>
@@ -43,7 +43,7 @@ export default function UldTrackingPage() {
           </div>
         </CardHeader>
         <CardContent className="flex-1 min-h-[280px] md:min-h-[300px]">
-          <div className="h-full w-full rounded-lg overflow-hidden">
+          <div className="h-full w-full overflow-hidden rounded-2xl border border-slate-200">
             <MapContainer
               center={center as [number, number]}
               zoom={3}
@@ -60,8 +60,8 @@ export default function UldTrackingPage() {
                 center={[uld.lat, uld.lon]}
                 radius={12 + (uld.riskScore * 20)}
                 pathOptions={{
-                  color: uld.risk === "HIGH" ? "#ef5d5d" : uld.risk === "MEDIUM" ? "#f5b84f" : "#39c575",
-                  fillColor: uld.risk === "HIGH" ? "#ef5d5d" : uld.risk === "MEDIUM" ? "#f5b84f" : "#39c575",
+                  color: uld.risk === "HIGH" ? "#DC2626" : uld.risk === "MEDIUM" ? "#CA8A04" : "#16A34A",
+                  fillColor: uld.risk === "HIGH" ? "#DC2626" : uld.risk === "MEDIUM" ? "#CA8A04" : "#16A34A",
                   fillOpacity: 0.6,
                 }}
               >
@@ -90,18 +90,18 @@ export default function UldTrackingPage() {
             <div
               key={uld.id}
               className={cn(
-                "rounded-lg border p-3 cursor-pointer transition-all",
-                flashes[`uld:${uld.id}`] ? "ring-1 ring-cyan-400/30 border-cyan-400/20" : "border-white/5 bg-white/[0.03]",
-                selectedUldId === uld.id ? "border-cyan-400/30 bg-cyan-400/5" : "hover:bg-white/[0.05]"
+                "cursor-pointer rounded-2xl border p-4 transition-all",
+                flashes[`uld:${uld.id}`] ? "border-blue-200 bg-blue-50 ring-1 ring-blue-100" : "border-slate-200 bg-slate-50",
+                selectedUldId === uld.id ? "border-blue-300 bg-blue-50" : "hover:bg-white"
               )}
               onClick={() => selectUld(uld.id)}
             >
               <div className="flex items-center justify-between">
-                <strong className="text-sm">{uld.id}</strong>
+                <strong className="text-sm text-slate-900">{uld.id}</strong>
                 <RiskBadge risk={uld.risk} />
               </div>
               <p className="text-xs text-slate-500 mt-1">{uld.airport} • {uld.zone}</p>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-slate-400">
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
                 <span>Temp: {uld.currentTemp}°C</span>
                 <span>Exposure: {uld.totalExposure}min</span>
               </div>
@@ -117,9 +117,9 @@ function RiskBadge({ risk }: { risk: string }) {
   return (
     <span className={cn(
       "text-[10px] font-medium px-2 py-0.5 rounded-full",
-      risk === "HIGH" && "bg-rose-400/15 text-rose-300",
-      risk === "MEDIUM" && "bg-amber-400/15 text-amber-300",
-      risk === "LOW" && "bg-emerald-400/15 text-emerald-300"
+      risk === "HIGH" && "bg-rose-50 text-rose-700",
+      risk === "MEDIUM" && "bg-amber-50 text-amber-700",
+      risk === "LOW" && "bg-emerald-50 text-emerald-700"
     )}>
       {risk}
     </span>

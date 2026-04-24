@@ -37,9 +37,24 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   }, [store]);
 
   useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      store.tickClock();
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [store]);
+
+  useEffect(() => {
     let socket: ReturnType<typeof io> | null = null;
+    let pollTimer: number | null = null;
 
     void bootstrap();
+
+    pollTimer = window.setInterval(() => {
+      void bootstrap();
+    }, 10000);
 
     try {
       socket = io(socketUrl, {
@@ -154,6 +169,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
 
     return () => {
+      if (pollTimer) {
+        window.clearInterval(pollTimer);
+      }
       if (socket) {
         socket.disconnect();
       }
@@ -182,8 +200,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {connectionError && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-amber-400/20 bg-amber-400/10 px-4 py-2 text-xs text-amber-300">
-          ⚠ {connectionError}
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-2 text-xs text-amber-800 shadow-sm backdrop-blur">
+          {connectionError}
         </div>
       )}
       {children}
