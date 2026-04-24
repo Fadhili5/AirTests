@@ -68,7 +68,7 @@ export class OperationsRepository {
     const rows = await this.redis.hGetAll("actions:index");
     return Object.values(rows)
       .map((row) => JSON.parse(row))
-      .filter((action) => action.status !== "COMPLETED")
+      .filter((action) => action.status !== "VERIFIED")
       .slice(0, limit);
   }
 

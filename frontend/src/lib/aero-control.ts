@@ -10,6 +10,14 @@ export const routes = [
     description: "System status, risk overview, and direct navigation into active operational domains.",
   },
   {
+    path: "/flights",
+    label: "Flights",
+    icon: "FL",
+    eyebrow: "Flight Ops",
+    title: "Long-Haul Flight Control",
+    description: "Emirates-style DXB transfer, uplift, and arrival exposure context.",
+  },
+  {
     path: "/uld-tracking",
     label: "ULD Tracking",
     icon: "UL",
@@ -18,10 +26,10 @@ export const routes = [
     description: "Realtime ULD movement, map context, and current operational state.",
   },
   {
-    path: "/exposure-analysis",
-    label: "Exposure Analysis",
+    path: "/exposure",
+    label: "Exposure",
     icon: "EX",
-    eyebrow: "Exposure Analysis",
+    eyebrow: "Exposure Intelligence",
     title: "Temperature & Exposure Breakdown",
     description: "Tarmac, ground, and flight exposure analysis with time-based charting.",
   },
@@ -79,7 +87,7 @@ export function authHeader() {
 }
 
 export function mapFleetToUld(item: any): UldExposure {
-  const risk = item.lastRisk?.level || item.status || "LOW";
+  const risk = normalizeRisk(item.lastRisk?.level || item.status || "LOW");
   return {
     id: item.uldId,
     airport: item.lastLocation?.airportCode || item.airportCode || "UNK",
@@ -107,7 +115,7 @@ export function mapFleetToUld(item: any): UldExposure {
 
 export function mapTelemetryToUld(event: any): UldExposure {
   const status = event.status || {};
-  const risk = event.risk?.risk_level || status.lastRisk?.level || "LOW";
+  const risk = normalizeRisk(event.risk?.risk_level || status.lastRisk?.level || "LOW");
   return {
     id: status.uldId,
     airport: status.lastLocation?.airportCode || "UNK",
@@ -138,11 +146,26 @@ export function mapActionToTask(action: any): InterventionTask {
     id: action.id,
     uldId: action.uldId,
     action: action.action,
-    role: action.priority === "CRITICAL" ? "Supervisor" : "Handler",
+    role:
+      action.assignedRole === "Ops Control"
+        ? "Ops Control"
+        : action.assignedRole === "Ramp Supervisor" || action.priority === "CRITICAL"
+          ? "Supervisor"
+          : "Handler",
     windowMinutes: action.slaMinutes ?? 10,
     dueAt: new Date(new Date(action.createdAt).getTime() + (action.slaMinutes ?? 10) * 60000).toISOString(),
-    status: action.status === "COMPLETED" ? "Completed" : action.status === "PENDING" ? "Pending" : "In Progress",
-    priority: action.priority === "CRITICAL" ? "Critical" : action.priority === "PREVENTIVE" ? "High" : "Normal",
+    status:
+      action.status === "VERIFIED"
+        ? "Completed"
+        : action.status === "ASSIGNED" || action.status === "ALERT_CREATED"
+          ? "Pending"
+          : "In Progress",
+    priority:
+      action.priority === "CRITICAL"
+        ? "Critical"
+        : action.priority === "HIGH" || action.priority === "PREVENTIVE"
+          ? "High"
+          : "Normal",
   };
 }
 
@@ -192,6 +215,14 @@ export function inferZone(value?: string): UldExposure["zone"] {
   if (normalized.includes("hold")) return "Aircraft Hold";
   if (normalized.includes("warehouse")) return "Warehouse";
   return "Ramp Buffer";
+}
+
+function normalizeRisk(value?: string): UldExposure["risk"] {
+  if (!value) return "LOW";
+  const normalized = String(value).toUpperCase();
+  if (normalized === "BREACH" || normalized === "CRITICAL" || normalized === "HIGH") return "HIGH";
+  if (normalized === "AT_RISK" || normalized === "WARNING" || normalized === "MEDIUM") return "MEDIUM";
+  return "LOW";
 }
 
 export function buildExposureChart(uld: UldExposure) {

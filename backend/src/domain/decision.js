@@ -4,8 +4,8 @@ export function buildDecisionPackage({ rule, status, risk, context }) {
   const notifications = [];
 
   if (risk.risk_score >= 0.8) {
-    actions.push(actionTemplate("MoveToColdZone", "PREVENTIVE", 10));
-    actions.push(actionTemplate("ApplyThermalCover", "PREVENTIVE", 15));
+    actions.push(actionTemplate("Move ULD to controlled storage", "Ramp Supervisor", "CRITICAL", 10));
+    actions.push(actionTemplate("Apply thermal protection", "Ground Handler", "HIGH", 15));
     workflows.push(workflowTemplate("PreventiveCoolingWorkflow", [
       "Move ULD to cold zone within 10 minutes",
       "Apply thermal cover",
@@ -19,7 +19,7 @@ export function buildDecisionPackage({ rule, status, risk, context }) {
   }
 
   if (context.delayDetected) {
-    actions.push(actionTemplate("EscalateDelayToAirportOps", "AUTOMATED", 5));
+    actions.push(actionTemplate("Prioritize handling", "Airport Control", "HIGH", 5));
     workflows.push(workflowTemplate("DelayEscalationWorkflow", [
       "Notify ground handler",
       "Update ops dashboard",
@@ -28,12 +28,12 @@ export function buildDecisionPackage({ rule, status, risk, context }) {
   }
 
   if (context.handlingGap) {
-    actions.push(actionTemplate("ExpediteHandling", "PREVENTIVE", 7));
+    actions.push(actionTemplate("Expedite loading", "Load Controller", "HIGH", 7));
   }
 
   if (status.status === "BREACH") {
-    actions.push(actionTemplate("RequireQAInspection", "CRITICAL", 5));
-    actions.push(actionTemplate("EscalateSLA", "CRITICAL", 3));
+    actions.push(actionTemplate("Require QA inspection", "Quality Lead", "CRITICAL", 5));
+    actions.push(actionTemplate("Escalate shipper disposition", "Ops Control", "CRITICAL", 3));
     workflows.push(workflowTemplate("CriticalBreachWorkflow", [
       "Move ULD to controlled environment immediately",
       "Notify QA and shipper",
@@ -46,8 +46,8 @@ export function buildDecisionPackage({ rule, status, risk, context }) {
     });
   }
 
-  if (status.status === "WARNING" && status.exposureRemaining <= 1) {
-    actions.push(actionTemplate("ExpediteLoading", "PREVENTIVE", 5));
+  if (status.status === "AT_RISK" && status.exposureRemaining <= 1) {
+    actions.push(actionTemplate("Expedite loading", "Load Controller", "HIGH", 5));
   }
 
   return {
@@ -59,9 +59,10 @@ export function buildDecisionPackage({ rule, status, risk, context }) {
   };
 }
 
-function actionTemplate(action, priority, slaMinutes) {
+function actionTemplate(action, assignedRole, priority, slaMinutes) {
   return {
     action,
+    assignedRole,
     priority,
     slaMinutes,
   };

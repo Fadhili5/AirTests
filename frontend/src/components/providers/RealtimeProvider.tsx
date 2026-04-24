@@ -42,23 +42,40 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     void bootstrap();
 
     try {
-      socket = io(socketUrl, { autoConnect: true, reconnectionAttempts: 5, timeout: 10000 });
+      socket = io(socketUrl, {
+        autoConnect: true,
+        path: "/socket.io",
+        transports: ["polling", "websocket"],
+        upgrade: true,
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        timeout: 10000,
+      });
 
       socket.on("connect_error", (err) => {
         console.error("[Realtime] Socket connect error:", err.message);
-        setConnectionError(`Socket connection failed: ${err.message}`);
+        setConnectionError("Realtime stream reconnecting. The API is reachable, but the live socket is retrying.");
         store.setSyncStatus(navigator.onLine ? "syncing" : "offline");
       });
 
       socket.on("connect", () => {
         setConnectionError(null);
+        store.setSyncStatus("online");
+      });
+
+      socket.on("disconnect", (reason) => {
+        if (reason !== "io client disconnect") {
+          store.setSyncStatus(navigator.onLine ? "syncing" : "offline");
+        }
       });
 
       socket.on("telemetry", (event) => {
         try {
           const uld = mapTelemetryToUld(event);
+          const current = useAeroStore.getState();
           store.mergeControlCenter({
-            ulds: updateUlds(store.ulds, uld),
+            ulds: updateUlds(current.ulds, uld),
             timeline: [
               {
                 id: crypto.randomUUID(),
@@ -67,7 +84,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
                 detail: `Telemetry refreshed for ${uld.id}.`,
                 timestamp: event.reading?.timestamp ?? new Date().toISOString(),
               },
-              ...store.timeline,
+              ...current.timeline,
             ].slice(0, 20) as TimelineEvent[],
           });
           store.pulse([`uld:${uld.id}`, `timeline:${uld.id}`]);
@@ -78,8 +95,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       socket.on("alert", (alert) => {
         try {
+          const current = useAeroStore.getState();
           store.mergeControlCenter({
-            alerts: [mapAlertItem(alert, store.selectedUldId), ...store.alerts].slice(0, 20),
+            alerts: [mapAlertItem(alert, current.selectedUldId), ...current.alerts].slice(0, 20),
           });
           store.pulse(["alerts"]);
         } catch (err) {
@@ -89,18 +107,19 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       socket.on("action", (action) => {
         try {
+          const current = useAeroStore.getState();
           const nextTask = mapActionToTask(action);
           store.mergeControlCenter({
-            tasks: replaceById(store.tasks, nextTask),
+            tasks: replaceById(current.tasks, nextTask),
             timeline: [
               {
                 id: crypto.randomUUID(),
                 uldId: action.uldId,
-                type: action.status === "COMPLETED" ? "Executed" : "Assigned",
-                detail: `${action.action} ${action.status === "COMPLETED" ? "completed" : "issued"} for ${action.uldId}.`,
+                type: action.status === "VERIFIED" ? "Executed" : "Assigned",
+                detail: `${action.action} ${action.status === "VERIFIED" ? "completed" : "issued"} for ${action.uldId}.`,
                 timestamp: action.completedAt || action.createdAt,
               },
-              ...store.timeline,
+              ...current.timeline,
             ].slice(0, 20) as TimelineEvent[],
           });
           store.pulse([`task:${action.id}`]);
@@ -111,6 +130,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       socket.on("workflow", (workflow) => {
         try {
+          const current = useAeroStore.getState();
           store.mergeControlCenter({
             timeline: [
               {
@@ -120,7 +140,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
                 detail: `${workflow.name} acknowledged for ${workflow.uldId}.`,
                 timestamp: workflow.createdAt,
               },
-              ...store.timeline,
+              ...current.timeline,
             ].slice(0, 20) as TimelineEvent[],
           });
           store.pulse([`timeline:${workflow.uldId}`]);
@@ -145,7 +165,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       const controlResponse = await axios.get(`${apiUrl}/api/control-center`, { headers: authHeader(), timeout: 8000 });
       const fleet = (controlResponse.data.fleet || []).map(mapFleetToUld);
       const nextTasks = (controlResponse.data.pendingActions || []).map(mapActionToTask);
-      const nextAlerts = (controlResponse.data.alerts || []).map((item: any) => mapAlertItem(item, store.selectedUldId));
+      const current = useAeroStore.getState();
+      const nextAlerts = (controlResponse.data.alerts || []).map((item: any) => mapAlertItem(item, current.selectedUldId));
 
       store.mergeControlCenter({
         ulds: fleet.length > 0 ? fleet : undefined,

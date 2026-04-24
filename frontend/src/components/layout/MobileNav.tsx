@@ -3,8 +3,9 @@ import { cn } from "../../lib/utils";
 
 const MOBILE_ITEMS = [
   { path: "/dashboard", label: "Dash", icon: LayoutIcon },
+  { path: "/flights", label: "Flights", icon: FlightIcon },
   { path: "/uld-tracking", label: "ULDs", icon: MapIcon },
-  { path: "/exposure-analysis", label: "Exposure", icon: ThermometerIcon },
+  { path: "/exposure", label: "Exposure", icon: ThermometerIcon },
   { path: "/alerts", label: "Alerts", icon: AlertIcon },
   { path: "/interventions", label: "Tasks", icon: TaskIcon },
   { path: "/airports", label: "Airports", icon: AirportIcon },
@@ -47,6 +48,14 @@ function MapIcon({ className }: { className?: string }) {
   return (
     <svg className={cn("w-5 h-5", className)} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+    </svg>
+  );
+}
+
+function FlightIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("w-5 h-5", className)} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6.75l10.125-1.688a.75.75 0 01.842.99l-1.5 4.5a.75.75 0 00.146.745l2.024 2.53a.75.75 0 01-.467 1.205l-4.907.701a.75.75 0 00-.43.215l-3.454 3.454a.75.75 0 01-1.26-.546v-4.195a.75.75 0 00-.22-.53L7.5 10.5M3.75 20.25l3-3m0 0l2.25-2.25m-2.25 2.25L3 13.5m3.75 3.75l3.75 3.75" />
     </svg>
   );
 }

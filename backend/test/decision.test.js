@@ -43,8 +43,8 @@ test("creates preventive and critical actions from risk and breach", () => {
     },
   });
 
-  assert.equal(decision.actions.some((item) => item.action === "MoveToColdZone"), true);
-  assert.equal(decision.actions.some((item) => item.action === "RequireQAInspection"), true);
+  assert.equal(decision.actions.some((item) => item.action === "Move ULD to controlled storage"), true);
+  assert.equal(decision.actions.some((item) => item.action === "Require QA inspection"), true);
   assert.equal(decision.workflows.length > 0, true);
   assert.equal(decision.notifications.length > 0, true);
 });

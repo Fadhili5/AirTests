@@ -106,8 +106,9 @@ export default function DashboardPage() {
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {[
+                  { path: "/flights", label: "Flights", icon: "FL" },
                   { path: "/uld-tracking", label: "ULD Tracking", icon: "📍" },
-                  { path: "/exposure-analysis", label: "Exposure Analysis", icon: "🌡️" },
+                  { path: "/exposure", label: "Exposure", icon: "🌡️" },
                   { path: "/alerts", label: "Alerts", icon: "🔔" },
                   { path: "/interventions", label: "Interventions", icon: "📋" },
                   { path: "/airports", label: "Airports", icon: "✈️" },

@@ -14,7 +14,7 @@ export class ActionOrchestrator {
     for (const actionTemplate of decisionPackage.actions) {
       const alreadyOpen = existingActions.some(
         (action) =>
-          action.action === actionTemplate.action && action.status !== "COMPLETED",
+          action.action === actionTemplate.action && action.status !== "VERIFIED",
       );
       if (alreadyOpen) {
         continue;
@@ -24,15 +24,27 @@ export class ActionOrchestrator {
         id: `${uldId}-${actionTemplate.action}-${Date.now()}-${Math.round(Math.random() * 1000)}`,
         uldId,
         action: actionTemplate.action,
+        assignedRole: actionTemplate.assignedRole,
         priority: actionTemplate.priority,
         slaMinutes: actionTemplate.slaMinutes,
-        status: actionTemplate.priority === "AUTOMATED" ? "COMPLETED" : "PENDING",
+        status: "ALERT_CREATED",
+        executionStatus: actionTemplate.priority === "AUTOMATED" ? "VERIFIED" : "ASSIGNED",
         createdAt: reading.timestamp,
-        completedAt:
-          actionTemplate.priority === "AUTOMATED" ? new Date().toISOString() : null,
-        responseTimeMinutes:
-          actionTemplate.priority === "AUTOMATED" ? 1 : null,
+        acknowledgedAt: null,
+        completedAt: null,
+        verifiedAt: null,
+        responseTimeMinutes: null,
+        slaDeadline: new Date(
+          new Date(reading.timestamp).getTime() + actionTemplate.slaMinutes * 60000,
+        ).toISOString(),
       };
+      action.status = "ASSIGNED";
+      if (actionTemplate.priority === "AUTOMATED") {
+        action.status = "VERIFIED";
+        action.completedAt = new Date().toISOString();
+        action.verifiedAt = action.completedAt;
+        action.responseTimeMinutes = 1;
+      }
       await this.operationsRepository.appendAction(uldId, action);
       await this.operationsRepository.setAction(action);
       await this.operationsRepository.appendTimeline(uldId, {
@@ -85,8 +97,9 @@ export class ActionOrchestrator {
 
     const completed = {
       ...action,
-      status: "COMPLETED",
+      status: "VERIFIED",
       completedAt: new Date().toISOString(),
+      verifiedAt: new Date().toISOString(),
       responseTimeMinutes: action.responseTimeMinutes || 3,
     };
     await this.operationsRepository.setAction(completed);

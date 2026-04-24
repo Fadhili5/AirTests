@@ -8,6 +8,8 @@ export function buildApiRouter({
   actionOrchestrator,
   auditStore,
   subscriptionRepository,
+  reconciliationService,
+  oneRecordService,
   authMiddleware,
 }) {
   const router = Router();
@@ -19,6 +21,7 @@ export function buildApiRouter({
   });
 
   router.get("/uld/:id/status", async (req, res) => {
+    await reconciliationService.enqueueVerification(req.params.id, "uld_status_read");
     const state = await exposureRepository.getState(req.params.id);
     const telemetry = await exposureRepository.getTelemetry(req.params.id, 50);
     if (!state) {
@@ -28,7 +31,13 @@ export function buildApiRouter({
   });
 
   router.get("/fleet", async (_req, res) => {
-    res.json(await exposureRepository.getFleetStatus());
+    const fleet = await exposureRepository.getFleetStatus();
+    await Promise.allSettled(
+      fleet.slice(0, 50).map((item) =>
+        reconciliationService.enqueueVerification(item.uldId, "fleet_read"),
+      ),
+    );
+    res.json(fleet);
   });
 
   router.get("/alerts", async (req, res) => {
@@ -45,6 +54,11 @@ export function buildApiRouter({
     res.json(await auditStore.list(Math.min(limit, 100)));
   });
 
+  router.get("/verification/audit", async (req, res) => {
+    const limit = Number.parseInt(String(req.query.limit || "50"), 10);
+    res.json(await reconciliationService.listAudits(Math.min(limit, 100)));
+  });
+
   router.get("/platform", async (_req, res) => {
     res.json({
       apiSecurity: config.auth.disabled ? "disabled-for-local-dev" : "keycloak-jwt",
@@ -57,6 +71,13 @@ export function buildApiRouter({
         actionOrchestration: true,
         workflowEngine: true,
         operationalContext: true,
+        verificationQueue: true,
+        oneRecordDigitalTwin: true,
+      },
+      performanceTargets: {
+        redisReadMs: 50,
+        apiResponseMs: 150,
+        uldScale: 10000,
       },
     });
   });
@@ -73,7 +94,44 @@ export function buildApiRouter({
       workflows,
       alerts,
       analytics,
+      flight: {
+        number: config.operations.primaryFlightNumber,
+        route: `${config.operations.originAirport}-${config.operations.destinationAirport}`,
+        airline: config.operations.airlineCode,
+      },
     });
+  });
+
+  router.get("/flights", async (_req, res) => {
+    res.json([
+      {
+        id: config.operations.primaryFlightNumber,
+        route: `${config.operations.originAirport}-${config.operations.destinationAirport}`,
+        airline: "Emirates",
+        status: "DELAYED",
+        aircraftType: "B777F",
+        delayMinutes: 37,
+      },
+    ]);
+  });
+
+  router.get("/one-record/ulds/:id", async (req, res) => {
+    const twin = await oneRecordService.getUld(req.params.id);
+    if (!twin) {
+      return res.status(404).json({ error: "ULD digital twin not found" });
+    }
+    res.setHeader("Content-Type", "application/ld+json");
+    res.json(twin.payload || twin);
+  });
+
+  router.post("/one-record/ulds", async (req, res) => {
+    const created = await oneRecordService.createUld(req.body);
+    res.status(created ? 201 : 202).json(created || { queued: true });
+  });
+
+  router.patch("/one-record/ulds/:id", async (req, res) => {
+    const updated = await oneRecordService.updateUld(req.params.id, req.body);
+    res.status(updated ? 200 : 202).json(updated || { queued: true });
   });
 
   router.post("/alert/subscribe", async (req, res) => {

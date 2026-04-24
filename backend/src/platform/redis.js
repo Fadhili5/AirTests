@@ -57,6 +57,18 @@ class InMemoryRedis {
     return list.slice(start, end);
   }
 
+  async rPop(key) {
+    const list = this.lists.get(key) || [];
+    const value = list.pop() ?? null;
+    this.lists.set(key, list);
+    return value;
+  }
+
+  async lLen(key) {
+    const list = this.lists.get(key) || [];
+    return list.length;
+  }
+
   async hSet(key, field, value) {
     const hash = this.hashes.get(key) || new Map();
     hash.set(field, value);

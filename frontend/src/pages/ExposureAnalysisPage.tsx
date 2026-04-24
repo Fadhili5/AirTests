@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 
@@ -36,8 +35,8 @@ export default function ExposureAnalysisPage() {
             <CardDescription>Temperature exposure breakdown by phase and time.</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="min-h-[240px] md:min-h-[280px]">
-          <div className="h-full w-full" style={{ minHeight: 200 }}>
+        <CardContent>
+          <div className="h-[260px] w-full md:h-[320px]">
             {chartData.length > 0 && (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
@@ -66,6 +65,11 @@ export default function ExposureAnalysisPage() {
                   />
                 </LineChart>
               </ResponsiveContainer>
+            )}
+            {chartData.length === 0 && (
+              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-white/10 text-sm text-slate-400">
+                No exposure data available yet.
+              </div>
             )}
           </div>
         </CardContent>

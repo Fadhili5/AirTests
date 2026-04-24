@@ -85,3 +85,12 @@ export interface QueueItem {
   label: string;
   createdAt: string;
 }
+
+export interface AnalyticsPoint {
+  timestamp: string;
+  averageExposureScore: number;
+  averageRiskScore: number;
+  highRiskCount: number;
+  alertCount: number;
+  pendingTaskCount: number;
+}

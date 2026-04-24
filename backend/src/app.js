@@ -15,6 +15,8 @@ export function buildApp({
   actionOrchestrator,
   auditStore,
   subscriptionRepository,
+  reconciliationService,
+  oneRecordService,
 }) {
   const app = express();
   app.use(cors());
@@ -32,6 +34,8 @@ export function buildApp({
       actionOrchestrator,
       auditStore,
       subscriptionRepository,
+      reconciliationService,
+      oneRecordService,
       authMiddleware: authMiddleware(config),
     }),
   );

@@ -30,7 +30,7 @@ test("increments cumulative exposure when above threshold", () => {
   });
 
   assert.equal(state.exposureUsed, 35);
-  assert.equal(state.status, "NORMAL");
+  assert.equal(state.status, "OK");
 });
 
 test("caps missing data gap at 30 minutes", () => {
@@ -61,4 +61,5 @@ test("caps missing data gap at 30 minutes", () => {
   });
 
   assert.equal(state.exposureUsed, 30);
+  assert.equal(state.phaseExposure.tarmacMinutes, 30);
 });

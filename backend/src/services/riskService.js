@@ -65,7 +65,7 @@ function localRiskFallback({ reading, weather, context, status }) {
         ? 5
         : Math.max(5, Math.round((1 - riskScore) * 60)),
     risk_level:
-      riskScore >= 0.8 ? "HIGH" : riskScore >= 0.55 ? "MEDIUM" : "LOW",
+      riskScore >= 0.85 ? "CRITICAL" : riskScore >= 0.65 ? "HIGH" : riskScore >= 0.45 ? "MEDIUM" : "LOW",
     factors: {
       temperatureTrend: Number(context.temperatureSlope.toFixed(3)),
       ambientTemp: weather.ambient_temp,

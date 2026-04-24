@@ -1,124 +1,173 @@
-# AeroSentinel X
+# AeroSentinel
 
-AeroSentinel X is a real-time cold chain control and compliance platform for temperature-sensitive air cargo. It monitors ULD telemetry, predicts excursion risk, tracks cumulative exposure, detects operational failures, orchestrates mitigation actions, and maintains a ONE Record-aligned digital twin as the source of truth.
+AeroSentinel is a production-style, multi-page air cargo exposure intelligence platform for long-haul airline operations. It combines a fast Redis-backed operational state layer with an eventual-consistency ONE Record digital twin so teams can sense, predict, act, verify, and audit cold-chain risk in real time.
+
+## What It Does
+
+- Tracks cumulative tarmac, ground-delay, transfer, and in-flight exposure for ULDs
+- Scores predicted breach risk from telemetry, weather, and operational context
+- Generates role-based interventions with SLA deadlines and execution tracking
+- Verifies Redis state against the ONE Record twin through a reconciliation queue
+- Maintains audit history for telemetry, interventions, notifications, and drift events
+- Streams incremental updates to a responsive, tablet-first multi-page operations UI
 
 ## Architecture
 
-`IoT Sensors -> MQTT -> Ingestion API -> Risk Engine -> Exposure Engine -> Decision Engine -> Action Orchestrator -> ONE Record -> Dashboard`
+`IoT Sensors -> MQTT -> Ingestion API -> Exposure Engine -> Risk Engine -> Intervention Engine -> Verification Queue -> ONE Record Sync -> Digital Twin`
 
-The repository includes:
+### Layer 1: Real-Time Operational State
 
-- `backend/`
-  Express backend with MQTT ingestion, operational context detection, exposure engine, decision engine, action orchestration, audit logging, alerts, analytics, and ONE Record integration.
-- `risk-service/`
-  FastAPI microservice for predictive risk scoring.
-- `frontend/`
-  React + TypeScript + Vite operations client with a tablet-first cargo control shell, Tailwind-based design system, Zustand offline store, service-worker registration, live map, exposure intelligence cards, intervention tasks, incidents, inventory, and assistant workflows.
-- `simulator/`
-  Multi-ULD simulator with heatwave, delay, and sensor-failure scenarios.
-- `broker/`
-  Local Aedes MQTT broker for no-Docker development.
-- `infra/`
-  Docker Compose stack for Mosquitto, Redis, PostgreSQL, Keycloak, GraphDB, NE:ONE, Prometheus, Grafana, MailHog, and the risk service.
+- Redis is the fast operational source of truth
+- APIs are optimized for fast-path reads
+- Socket.IO streams incremental UI updates
+- The UI reads operational state from Redis-backed APIs, not directly from ONE Record
 
-## UI Layout
+### Layer 2: ONE Record Digital Twin
 
-The frontend is now structured as a tablet-first operational web app for cargo exposure control instead of a single desktop dashboard.
+- NE:ONE-compatible JSON-LD payloads
+- Graph-oriented logistics object model
+- OAuth2 client-credentials token handling with Redis token cache
+- Eventual consistency maintained by async sync and reconciliation
 
-- Top bar:
-  mission title, flight context, and offline/sync indicator
-- Main body:
-  three-panel operational layout with cargo operations, live exposure intelligence, and alerts/action control
-- Bottom navigation:
-  `Dashboard | ULDs | Inventory | Incidents | Tasks | AI`
-- Tablet-first interaction model:
-  touch-friendly cards, large action targets, dense but readable spacing, and stable panel structure
-- Offline-first behavior:
-  queued actions, pending sync drawer, service worker registration, and automatic sync when connectivity returns
-- Real-time behavior:
-  Socket.IO updates pulse only the changed cards instead of shifting the full layout
+## Multi-Page Dashboard
 
-## Core Capabilities
+The frontend is a real multi-page dashboard, not a single-screen mockup. Current routes:
 
-- Real-time MQTT ingestion for multiple ULD streams
-- Predictive risk scoring with Python service and local fallback model
-- Exposure tracking with cumulative excursion logic and gap handling
-- Operational context detection for tarmac exposure, delays, handling gaps, battery, and signal health
-- Decision engine for preventive and critical actions
-- Action orchestration and SOP workflow tracking
-- Alerting over webhook and email channels
-- ONE Record digital twin extensions for risk, compliance, and mitigation history
-- Live React operations dashboard with Socket.IO updates
-- Offline-first operational UI with local queue visibility and sync recovery
-- Tablet-first modular screens for ULD exposure, interventions, incidents, inventory, and assistant workflows
+- `/dashboard`
+- `/flights`
+- `/uld-tracking`
+- `/exposure`
+- `/interventions`
+- `/alerts`
+- `/airports`
+- `/analytics`
+- `/settings`
 
-## Local Run
+Each page has its own route, navigation state, and focused operational context:
 
-Local mode is designed to work even without Redis, PostgreSQL, Keycloak, the risk microservice, or NE:ONE running locally.
+- `Dashboard`: fleet posture, critical summaries, and route entry points
+- `Flights`: Emirates-style long-haul flight control context
+- `ULD Tracking`: live fleet map and ULD status cards
+- `Exposure`: cumulative thermal exposure intelligence
+- `Interventions`: action queue, assignment, SLA, and execution state
+- `Alerts`: risk events and escalation monitoring
+- `Airports`: airport and zone-level bottleneck views
+- `Analytics`: compliance and exposure performance
 
-What local mode does:
+## Key Backend Capabilities
 
-- starts a local MQTT broker
-- uses in-memory persistence when Redis is unavailable
-- uses in-memory audit storage when PostgreSQL is unavailable
-- falls back to an embedded risk scorer when the FastAPI risk service is unavailable
-- disables API auth when `AUTH_DISABLED=true`
-- serves the frontend without Keycloak when `VITE_AUTH_DISABLED=true`
+- MQTT ingestion for ULD telemetry
+- Exposure engine with cumulative threshold tracking
+- Predictive risk scoring with remote service fallback
+- Intervention orchestration with assigned roles and verification-oriented lifecycle
+- Verification queue with drift rules for temperature, exposure, and risk level
+- Reconciliation worker to realign Redis and the ONE Record twin
+- Audit trail for telemetry, actions, workflows, notifications, and reconciliation
 
-Install dependencies:
+## ONE Record Model
+
+Implemented entities and extensions include:
+
+- `LogisticsObject` for ULDs
+- `TemperatureRecord`
+- `Location`
+- `TemperatureComplianceStatus`
+- `RiskAssessment`
+- `OperationalContext`
+
+Supported backend endpoints include:
+
+- `GET /api/one-record/ulds/:id`
+- `POST /api/one-record/ulds`
+- `PATCH /api/one-record/ulds/:id`
+
+## Repository Layout
+
+- `backend/`: Express API, ingestion pipeline, Redis state, reconciliation, and ONE Record sync
+- `frontend/`: React + TypeScript multi-page dashboard
+- `broker/`: local MQTT broker
+- `simulator/`: telemetry generator for scenario playback
+- `risk-service/`: Python predictive risk microservice
+- `infra/`: Docker Compose for Redis, PostgreSQL, Keycloak, GraphDB, NE:ONE, and observability
+
+## Local Development
+
+The local setup is designed to run even if Redis, PostgreSQL, Keycloak, GraphDB, or NE:ONE are unavailable.
+
+### Install
 
 ```bash
-npm install
+npm install --workspaces
 ```
 
-Start the full local stack:
+### Start Locally
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-local.ps1
+1. Start the MQTT broker:
+
+```bash
+npm run dev:broker
 ```
 
-Stop the local stack:
+2. Start the backend in local fallback mode:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-local.ps1
+```bash
+AUTH_DISABLED=true \
+REDIS_DISABLED=true \
+POSTGRES_DISABLED=true \
+RISK_SERVICE_DISABLED=true \
+ONE_RECORD_ENABLED=false \
+npm run dev:backend
 ```
 
-Local endpoints:
+3. Start the frontend:
 
-- Dashboard: `http://localhost:5173`
+```bash
+npm run dev:frontend -- --host 0.0.0.0
+```
+
+4. Start the simulator to generate telemetry:
+
+```bash
+MQTT_URL=mqtt://localhost:1883 npm run dev:simulator
+```
+
+### Local Endpoints
+
+- Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:3000`
 - Metrics: `http://localhost:3000/metrics`
+- Health: `http://localhost:3000/api/health`
 
-## Docker Run
+## Docker Stack
 
-Bring up the full infrastructure stack:
+To run the full hybrid stack with infrastructure:
 
 ```bash
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-Main services:
+Primary services:
 
-- Dashboard: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
 - Risk service: `http://localhost:8010`
 - Keycloak: `http://localhost:8081`
 - NE:ONE: `http://localhost:8080`
 - GraphDB: `http://localhost:7200`
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3001`
-- MailHog: `http://localhost:8025`
 
-## API Surface
-
-Protected APIs live under `/api/*` when auth is enabled.
+## API Summary
 
 - `GET /api/health`
 - `GET /api/platform`
 - `GET /api/fleet`
 - `GET /api/control-center`
+- `GET /api/flights`
 - `GET /api/analytics`
 - `GET /api/alerts`
+- `GET /api/audit`
+- `GET /api/verification/audit`
 - `GET /api/uld/:id/status`
 - `GET /api/uld/:id/actions`
 - `GET /api/uld/:id/workflows`
@@ -127,58 +176,12 @@ Protected APIs live under `/api/*` when auth is enabled.
 - `POST /api/alert/subscribe`
 - `POST /api/uld/:id/reset`
 
-## Configuration
+## Verification
 
-Common environment variables:
-
-- `OPENWEATHER_API_KEY`
-- `MQTT_URL`
-- `REDIS_URL`
-- `POSTGRES_URL`
-- `RISK_SERVICE_URL`
-- `ONE_RECORD_BASE_URL`
-- `KEYCLOAK_ISSUER`
-- `KEYCLOAK_JWKS_URI`
-- `KEYCLOAK_AUDIENCE`
-
-Local development switches:
-
-- `AUTH_DISABLED=true`
-- `REDIS_DISABLED=true`
-- `POSTGRES_DISABLED=true`
-- `RISK_SERVICE_DISABLED=true`
-- `ONE_RECORD_ENABLED=false`
-- `VITE_AUTH_DISABLED=true`
-
-## Testing
-
-Run backend tests:
+Validated in this workspace with:
 
 ```bash
-npm test
-```
-
-Build the frontend:
-
-```bash
+npm --workspace backend test
+npm --workspace frontend run typecheck
 npm --workspace frontend run build
 ```
-
-Run frontend type checking:
-
-```bash
-npm --workspace frontend run typecheck
-```
-
-## Demo Scenarios
-
-See:
-
-- [docs/demo.md](</c:/Users/User/Desktop/me/docs/demo.md>)
-- [docs/scenarios.md](</c:/Users/User/Desktop/me/docs/scenarios.md>)
-
-These cover:
-
-- tarmac heat risk with preventive action
-- delay-to-breach escalation
-- recovery and audit verification

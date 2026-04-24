@@ -8,13 +8,16 @@ import { ExposureRepository } from "./repositories/exposureRepository.js";
 import { OperationsRepository } from "./repositories/operationsRepository.js";
 import { SubscriptionRepository } from "./repositories/subscriptionRepository.js";
 import { DlqRepository } from "./repositories/dlqRepository.js";
+import { VerificationQueueRepository } from "./repositories/verificationQueueRepository.js";
 import { WeatherService } from "./services/weatherService.js";
 import { AlertService } from "./services/alertService.js";
+import { OneRecordAuthService } from "./services/oneRecordAuthService.js";
 import { OneRecordService } from "./services/oneRecordService.js";
 import { RiskService } from "./services/riskService.js";
 import { AnalyticsService } from "./services/analyticsService.js";
 import { ActionOrchestrator } from "./services/actionOrchestrator.js";
 import { NotificationRouter } from "./services/notificationRouter.js";
+import { ReconciliationService } from "./services/reconciliationService.js";
 import { TelemetryPipeline } from "./services/telemetryPipeline.js";
 import { MqttConsumer } from "./services/mqttConsumer.js";
 import { buildApp } from "./app.js";
@@ -30,6 +33,7 @@ const exposureRepository = new ExposureRepository(redis, config.retention.eventL
 const operationsRepository = new OperationsRepository(redis, config.retention.eventListLimit);
 const subscriptionRepository = new SubscriptionRepository(redis);
 const dlqRepository = new DlqRepository(redis);
+const verificationQueueRepository = new VerificationQueueRepository(redis);
 const analyticsService = new AnalyticsService({
   exposureRepository,
   operationsRepository,
@@ -43,6 +47,21 @@ const actionOrchestrator = new ActionOrchestrator({
   operationsRepository,
   auditStore,
   io,
+});
+const oneRecordAuthService = new OneRecordAuthService({ config, redis, logger });
+const oneRecordService = new OneRecordService({
+  config,
+  logger,
+  authService: oneRecordAuthService,
+  redis,
+});
+const reconciliationService = new ReconciliationService({
+  config,
+  exposureRepository,
+  verificationQueueRepository,
+  oneRecordService,
+  auditStore,
+  logger,
 });
 
 const pipeline = new TelemetryPipeline({
@@ -67,7 +86,8 @@ const pipeline = new TelemetryPipeline({
     smtp: config.smtp,
     logger,
   }),
-  oneRecordService: new OneRecordService({ config, logger }),
+  oneRecordService,
+  reconciliationService,
   io,
 });
 
@@ -80,6 +100,8 @@ const app = buildApp({
   actionOrchestrator,
   auditStore,
   subscriptionRepository,
+  reconciliationService,
+  oneRecordService,
 });
 
 const server = http.createServer(app);
@@ -98,5 +120,6 @@ io.on("connection", async (socket) => {
 
 server.listen(config.port, () => {
   logger.info({ port: config.port }, "Backend listening");
+  reconciliationService.start();
   mqttConsumer.start();
 });

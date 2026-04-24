@@ -2,6 +2,7 @@ import { getRuleForUld } from "../domain/rules.js";
 import { computeExposureState } from "../domain/exposure.js";
 import { buildOperationalContext } from "../domain/context.js";
 import { buildDecisionPackage } from "../domain/decision.js";
+import { getPrimaryFlight } from "../domain/flightModel.js";
 import { ingestCounter } from "../platform/metrics.js";
 
 export class TelemetryPipeline {
@@ -16,6 +17,7 @@ export class TelemetryPipeline {
     auditStore,
     alertService,
     oneRecordService,
+    reconciliationService,
     io,
   }) {
     this.config = config;
@@ -28,6 +30,7 @@ export class TelemetryPipeline {
     this.auditStore = auditStore;
     this.alertService = alertService;
     this.oneRecordService = oneRecordService;
+    this.reconciliationService = reconciliationService;
     this.io = io;
   }
 
@@ -74,6 +77,8 @@ export class TelemetryPipeline {
       level: risk.risk_level,
       timeToBreachMinutes: risk.time_to_breach_minutes,
     };
+    status.minTempC = rule.minTempC;
+    status.maxTempC = rule.maxTempC;
     status.operationalContext = operationalContext;
 
     await this.exposureRepository.saveState(reading.uld_id, status);
@@ -94,7 +99,9 @@ export class TelemetryPipeline {
       actions: orchestration.actions,
       workflows: orchestration.workflows,
       context: operationalContext,
+      flight: getPrimaryFlight(),
     });
+    await this.reconciliationService.enqueueVerification(reading.uld_id, "telemetry");
 
     const event = {
       reading: enriched,
@@ -121,7 +128,7 @@ export class TelemetryPipeline {
       operationalContext,
     });
 
-    const previousStatus = previous?.status || "NORMAL";
+    const previousStatus = previous?.status || "OK";
     const nextStatus = status.status;
 
     if (shouldEmitAlert(previousStatus, nextStatus)) {
@@ -162,11 +169,11 @@ function shouldCreateOperationalResponse(previous, status, risk, context) {
 }
 
 function shouldEmitAlert(previousStatus, nextStatus) {
-  if (previousStatus !== nextStatus && (nextStatus === "WARNING" || nextStatus === "BREACH")) {
+  if (previousStatus !== nextStatus && (nextStatus === "AT_RISK" || nextStatus === "BREACH")) {
     return true;
   }
 
-  if ((previousStatus === "WARNING" || previousStatus === "BREACH") && nextStatus === "NORMAL") {
+  if ((previousStatus === "AT_RISK" || previousStatus === "BREACH") && nextStatus === "OK") {
     return true;
   }
 
@@ -188,7 +195,7 @@ function buildAlert({ reading, enriched, previousStatus, nextStatus, status }) {
     };
   }
 
-  if (nextStatus === "WARNING") {
+  if (nextStatus === "AT_RISK") {
     return {
       id: `${reading.uld_id}-${Date.now()}-warning`,
       uld_id: reading.uld_id,

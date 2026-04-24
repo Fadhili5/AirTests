@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
-import { MapContainer, TileLayer, CircleMarker, Popup, Circle, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 
 export default function AirportsPage() {
   const { ulds } = useAeroStore();
@@ -53,37 +52,37 @@ export default function AirportsPage() {
             <CardDescription>Geographic risk visualization and delay hotspots.</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="min-h-[280px] md:min-h-[320px]">
-          <div className="h-full w-full rounded-lg overflow-hidden">
+        <CardContent>
+          <div className="h-[320px] w-full rounded-lg overflow-hidden md:h-[380px]">
             <MapContainer
               center={[25, 10]}
               zoom={2}
               scrollWheelZoom={false}
               style={{ height: "100%", width: "100%" }}
             >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {airports.map((airport) => (
-              <CircleMarker
-                key={airport.code}
-                center={[airport.lat, airport.lon]}
-                radius={14 + (airport.avgRiskScore * 18)}
-                pathOptions={{
-                  color: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
-                  fillColor: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
-                  fillOpacity: 0.6,
-                }}
-              >
-                <Popup>
-                  <strong>{airport.code}</strong><br />
-                  Avg Risk: {(airport.avgRiskScore * 100).toFixed(0)}%<br />
-                  ULDs: {airport.uldCount}
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {airports.map((airport) => (
+                <CircleMarker
+                  key={airport.code}
+                  center={[airport.lat, airport.lon]}
+                  radius={14 + (airport.avgRiskScore * 18)}
+                  pathOptions={{
+                    color: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
+                    fillColor: airport.avgRiskScore > 0.7 ? "#ef5d5d" : airport.avgRiskScore > 0.4 ? "#f5b84f" : "#39c575",
+                    fillOpacity: 0.6,
+                  }}
+                >
+                  <Popup>
+                    <strong>{airport.code}</strong><br />
+                    Avg Risk: {(airport.avgRiskScore * 100).toFixed(0)}%<br />
+                    ULDs: {airport.uldCount}
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </MapContainer>
           </div>
         </CardContent>
       </Card>

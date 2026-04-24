@@ -15,6 +15,10 @@ export function buildOperationalContext({ reading, previousState, weather }) {
     reading.flight_status === "DELAYED" ||
     (reading.time_on_tarmac_min || 0) >= 15 ||
     (reading.delay_minutes || 0) >= 15;
+  const transferExposure =
+    ["TRANSFER", "AIRPORT_TRANSIT"].includes(reading.airport_zone) ||
+    ((reading.speed_kph || 0) > 10 && (reading.speed_kph || 0) < 60);
+  const inFlightExposure = (reading.speed_kph || 0) >= 200;
   const sensorHealth =
     reading.battery <= 20 || reading.signal_rssi <= -95 ? "DEGRADED" : "HEALTHY";
 
@@ -25,6 +29,8 @@ export function buildOperationalContext({ reading, previousState, weather }) {
     tarmacExposure,
     delayDetected,
     handlingGap,
+    transferExposure,
+    inFlightExposure,
     sensorHealth,
     battery: reading.battery,
     signalRssi: reading.signal_rssi,

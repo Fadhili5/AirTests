@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type {
   AlertItem,
+  AnalyticsPoint,
   AppTab,
   IncidentItem,
   InterventionTask,
@@ -30,6 +31,7 @@ interface AeroState {
   inventory: InventoryItem[];
   incidents: IncidentItem[];
   timeline: TimelineEvent[];
+  analyticsHistory: AnalyticsPoint[];
   assistantMessages: { id: string; role: "assistant" | "user"; text: string }[];
   setActiveTab: (tab: AppTab) => void;
   selectUld: (id: string) => void;
@@ -352,6 +354,7 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       text: "Offline fallback loaded. Ask about exposure policy, intervention playbooks, or recovery procedures.",
     },
   ],
+  analyticsHistory: buildAnalyticsHistorySeed(),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectUld: (selectedUldId) => set({ selectedUldId }),
   setSyncStatus: (syncStatus) => set({ syncStatus }),
@@ -390,19 +393,30 @@ export const useAeroStore = create<AeroState>((set, get) => ({
     state.flushQueue();
   },
   markTaskCompleted: (taskId) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, status: "Completed" } : task)),
-      timeline: [
+    set((state) => {
+      const tasks = state.tasks.map((task) =>
+        task.id === taskId ? { ...task, status: "Completed" as const } : task,
+      );
+      const timeline = [
         {
           id: crypto.randomUUID(),
           uldId: state.tasks.find((task) => task.id === taskId)?.uldId || state.selectedUldId,
-          type: "Executed",
+          type: "Executed" as const,
           detail: `Task ${taskId} completed and awaiting thermal verification.`,
           timestamp: new Date().toISOString(),
         },
         ...state.timeline,
-      ],
-    }));
+      ];
+      return {
+        tasks,
+        timeline,
+        analyticsHistory: appendAnalyticsPoint(state.analyticsHistory, {
+          ulds: state.ulds,
+          alerts: state.alerts,
+          tasks,
+        }),
+      };
+    });
     get().queueAction("task.complete", `Complete intervention ${taskId}`);
     get().pulse([`task:${taskId}`]);
   },
@@ -449,12 +463,24 @@ export const useAeroStore = create<AeroState>((set, get) => ({
     get().queueAction("assistant.prompt", prompt);
   },
   mergeControlCenter: (payload) => {
-    set((state) => ({
-      ulds: payload.ulds ?? state.ulds,
-      tasks: payload.tasks ?? state.tasks,
-      alerts: payload.alerts ?? state.alerts,
-      timeline: payload.timeline ?? state.timeline,
-    }));
+    set((state) => {
+      const ulds = payload.ulds ?? state.ulds;
+      const tasks = payload.tasks ?? state.tasks;
+      const alerts = payload.alerts ?? state.alerts;
+      const timeline = payload.timeline ?? state.timeline;
+
+      return {
+        ulds,
+        tasks,
+        alerts,
+        timeline,
+        analyticsHistory: appendAnalyticsPoint(state.analyticsHistory, {
+          ulds,
+          alerts,
+          tasks,
+        }),
+      };
+    });
   },
   pulse: (keys) => {
     set((state) => {
@@ -477,3 +503,59 @@ export const useAeroStore = create<AeroState>((set, get) => ({
     });
   },
 }));
+
+function appendAnalyticsPoint(
+  history: AnalyticsPoint[],
+  payload: Pick<AeroState, "ulds" | "alerts" | "tasks">,
+) {
+  const point = buildAnalyticsPoint(payload);
+  const lastPoint = history[0];
+
+  if (
+    lastPoint &&
+    lastPoint.averageExposureScore === point.averageExposureScore &&
+    lastPoint.averageRiskScore === point.averageRiskScore &&
+    lastPoint.highRiskCount === point.highRiskCount &&
+    lastPoint.alertCount === point.alertCount &&
+    lastPoint.pendingTaskCount === point.pendingTaskCount
+  ) {
+    return history;
+  }
+
+  return [...history, point].slice(-24);
+}
+
+function buildAnalyticsPoint(payload: Pick<AeroState, "ulds" | "alerts" | "tasks">): AnalyticsPoint {
+  const uldCount = payload.ulds.length || 1;
+  const averageExposureScore = Number(
+    (
+      payload.ulds.reduce((sum, item) => sum + item.exposureScore, 0) / uldCount
+    ).toFixed(1),
+  );
+  const averageRiskScore = Number(
+    (
+      payload.ulds.reduce((sum, item) => sum + item.riskScore, 0) / uldCount
+    ).toFixed(2),
+  );
+
+  return {
+    timestamp: new Date().toISOString(),
+    averageExposureScore,
+    averageRiskScore,
+    highRiskCount: payload.ulds.filter((item) => item.risk === "HIGH").length,
+    alertCount: payload.alerts.length,
+    pendingTaskCount: payload.tasks.filter((item) => item.status !== "Completed").length,
+  };
+}
+
+function buildAnalyticsHistorySeed() {
+  const now = Date.now();
+  return Array.from({ length: 6 }, (_, index) => ({
+    timestamp: new Date(now - (5 - index) * 60000).toISOString(),
+    averageExposureScore: 48 + index * 3,
+    averageRiskScore: Number((0.34 + index * 0.05).toFixed(2)),
+    highRiskCount: Math.max(1, Math.round(1 + index / 2)),
+    alertCount: Math.max(1, Math.round(2 + index / 3)),
+    pendingTaskCount: Math.max(1, Math.round(3 - index / 3)),
+  }));
+}

@@ -38,7 +38,7 @@ export function Header({
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Flight ACX-204 / B777F
+            Flight EK202 / B777F
           </span>
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs text-cyan-200">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />

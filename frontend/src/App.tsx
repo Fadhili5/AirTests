@@ -5,6 +5,7 @@ import { RealtimeProvider } from "./components/providers/RealtimeProvider";
 import { ErrorBoundary } from "./components/providers/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const FlightsPage = lazy(() => import("./pages/FlightsPage"));
 const UldTrackingPage = lazy(() => import("./pages/UldTrackingPage"));
 const ExposureAnalysisPage = lazy(() => import("./pages/ExposureAnalysisPage"));
 const AlertsPage = lazy(() => import("./pages/AlertsPage"));
@@ -56,16 +57,22 @@ export function App() {
                   <DashboardPage />
                 </ErrorBoundary>
               } />
+              <Route path="/flights" element={
+                <ErrorBoundary fallback={<RouteErrorFallback name="Flights" />}>
+                  <FlightsPage />
+                </ErrorBoundary>
+              } />
               <Route path="/uld-tracking" element={
                 <ErrorBoundary fallback={<RouteErrorFallback name="ULD Tracking" />}>
                   <UldTrackingPage />
                 </ErrorBoundary>
               } />
-              <Route path="/exposure-analysis" element={
+              <Route path="/exposure" element={
                 <ErrorBoundary fallback={<RouteErrorFallback name="Exposure Analysis" />}>
                   <ExposureAnalysisPage />
                 </ErrorBoundary>
               } />
+              <Route path="/exposure-analysis" element={<Navigate to="/exposure" replace />} />
               <Route path="/alerts" element={
                 <ErrorBoundary fallback={<RouteErrorFallback name="Alerts" />}>
                   <AlertsPage />

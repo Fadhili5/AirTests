@@ -32,8 +32,22 @@ export const config = {
   },
   oneRecord: {
     baseUrl: process.env.ONE_RECORD_BASE_URL || "http://localhost:8080",
-    authToken: process.env.ONE_RECORD_AUTH_TOKEN || "",
     enabled: toBool(process.env.ONE_RECORD_ENABLED, true),
+    authToken: process.env.ONE_RECORD_AUTH_TOKEN || "",
+    apiPath: process.env.ONE_RECORD_API_PATH || "/api/ulds",
+    tokenUrl:
+      process.env.ONE_RECORD_TOKEN_URL ||
+      "http://localhost:8081/realms/or-atm/protocol/openid-connect/token",
+    clientId: process.env.ONE_RECORD_CLIENT_ID || "or-atm-backend",
+    clientSecret: process.env.ONE_RECORD_CLIENT_SECRET || "or-atm-backend-secret",
+    tokenRefreshSkewSeconds: Number.parseInt(
+      process.env.ONE_RECORD_TOKEN_REFRESH_SKEW_SECONDS || "30",
+      10,
+    ),
+    syncRetryDelayMs: Number.parseInt(
+      process.env.ONE_RECORD_SYNC_RETRY_DELAY_MS || "15000",
+      10,
+    ),
   },
   risk: {
     baseUrl: process.env.RISK_SERVICE_URL || "http://localhost:8010",
@@ -74,6 +88,26 @@ export const config = {
   },
   retention: {
     eventListLimit: Number.parseInt(process.env.EVENT_LIST_LIMIT || "500", 10),
+  },
+  verification: {
+    enabled: toBool(process.env.VERIFICATION_ENABLED, true),
+    pollIntervalMs: Number.parseInt(
+      process.env.VERIFICATION_POLL_INTERVAL_MS || "2000",
+      10,
+    ),
+    batchSize: Number.parseInt(process.env.VERIFICATION_BATCH_SIZE || "20", 10),
+    temperatureDriftThresholdCelsius: Number.parseFloat(
+      process.env.VERIFICATION_TEMPERATURE_DRIFT_C || "0.5",
+    ),
+    exposureDriftThresholdMinutes: Number.parseFloat(
+      process.env.VERIFICATION_EXPOSURE_DRIFT_MINUTES || "2",
+    ),
+  },
+  operations: {
+    airlineCode: process.env.AIRLINE_CODE || "EK",
+    primaryFlightNumber: process.env.PRIMARY_FLIGHT_NUMBER || "EK202",
+    originAirport: process.env.ORIGIN_AIRPORT || "DXB",
+    destinationAirport: process.env.DESTINATION_AIRPORT || "LHR",
   },
   observability: {
     enableMetrics: true,

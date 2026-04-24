@@ -1,13 +1,12 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { summarizeSystem } from "../lib/aero-control";
 import { useMemo } from "react";
 import { cn } from "../lib/utils";
 
 export default function AnalyticsPage() {
-  const { ulds, alerts, tasks } = useAeroStore();
+  const { ulds, alerts, tasks, analyticsHistory } = useAeroStore();
   const stats = useMemo(() => {
     try {
       return summarizeSystem(ulds, alerts, tasks);
@@ -19,16 +18,21 @@ export default function AnalyticsPage() {
 
   const complianceData = useMemo(() => {
     try {
-      return ulds.map((u) => ({
-        id: u.id,
-        exposureScore: u.exposureScore,
-        riskScore: Math.round(u.riskScore * 100),
+      return analyticsHistory.map((point) => ({
+        time: new Date(point.timestamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        exposureScore: point.averageExposureScore,
+        riskScore: Math.round(point.averageRiskScore * 100),
+        highRiskCount: point.highRiskCount,
+        alertCount: point.alertCount,
       }));
     } catch (err) {
       console.error("[Analytics] Compliance data error:", err);
       return [];
     }
-  }, [ulds]);
+  }, [analyticsHistory]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_380px] gap-3 md:gap-4">
@@ -53,14 +57,14 @@ export default function AnalyticsPage() {
               <CardDescription>System-wide exposure and compliance metrics over time.</CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="min-h-[240px] md:min-h-[260px]">
-            <div className="h-full w-full" style={{ minHeight: 200 }}>
+          <CardContent>
+            <div className="h-[260px] w-full md:h-[320px]">
               {complianceData.length > 0 && (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={complianceData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.08)" />
                     <XAxis 
-                      dataKey="id" 
+                      dataKey="time"
                       tick={{ fill: "#94a3b8", fontSize: 10 }}
                       stroke="rgba(148,163,184,0.08)"
                     />
@@ -89,8 +93,21 @@ export default function AnalyticsPage() {
                       dot={{ fill: "#3bd8d0" }}
                       name="Risk Score x100"
                     />
+                    <Line
+                      type="monotone"
+                      dataKey="highRiskCount"
+                      stroke="#ef5d5d"
+                      strokeWidth={2}
+                      dot={{ fill: "#ef5d5d" }}
+                      name="High Risk ULDs"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
+              )}
+              {complianceData.length === 0 && (
+                <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-white/10 text-sm text-slate-400">
+                  Waiting for realtime analytics samples.
+                </div>
               )}
             </div>
           </CardContent>
