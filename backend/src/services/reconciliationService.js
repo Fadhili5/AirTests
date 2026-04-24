@@ -13,24 +13,28 @@ export class ReconciliationService {
     this.oneRecordService = oneRecordService;
     this.auditStore = auditStore;
     this.logger = logger;
-    this.timer = null;
   }
 
-  start() {
+  async start() {
     if (!this.config.verification.enabled) {
       return;
     }
-
-    this.timer = setInterval(() => {
-      void this.drain();
-    }, this.config.verification.pollIntervalMs);
+    await this.verificationQueueRepository.registerProcessor(async (job) => {
+      try {
+        await this.verify(job);
+      } catch (error) {
+        this.logger.warn({ error: error.message, job }, "Verification job failed");
+        await this.verificationQueueRepository.appendFailure({
+          ...job,
+          failedAt: new Date().toISOString(),
+          reason: error.message,
+        });
+      }
+    });
   }
 
-  stop() {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
+  async stop() {
+    await this.verificationQueueRepository.stop();
   }
 
   async enqueueVerification(uldId, trigger = "read") {
@@ -44,26 +48,6 @@ export class ReconciliationService {
 
   async listAudits(limit = 100) {
     return this.verificationQueueRepository.listAudits(limit);
-  }
-
-  async drain() {
-    for (let index = 0; index < this.config.verification.batchSize; index += 1) {
-      const job = await this.verificationQueueRepository.dequeue();
-      if (!job) {
-        return;
-      }
-
-      try {
-        await this.verify(job);
-      } catch (error) {
-        this.logger.warn({ error: error.message, job }, "Verification job failed");
-        await this.verificationQueueRepository.appendFailure({
-          ...job,
-          failedAt: new Date().toISOString(),
-          reason: error.message,
-        });
-      }
-    }
   }
 
   async verify(job) {

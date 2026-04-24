@@ -84,7 +84,13 @@ class FakeReconciliationService {
 
 class FakeOneRecordService {
   async getUld() {
-    return null;
+    return {
+      payload: {
+        "@context": "https://onerecord.iata.org/ns/cargo",
+        "@id": "http://localhost:8080/api/ulds/JTN-7890",
+        "@type": "LogisticsObject",
+      },
+    };
   }
 
   async createUld(payload) {
@@ -151,6 +157,93 @@ test("status route returns data and enqueues verification when auth disabled", a
   assert.deepEqual(reconciliationService.jobs, [
     { uldId: "JTN-7890", trigger: "uld_status_read" },
   ]);
+});
+
+test("strict JSON-LD create route is exposed at /ulds", async () => {
+  const router = buildApiRouter({
+    config: {
+      auth: { disabled: true },
+      operations: {
+        airlineCode: "EK",
+        primaryFlightNumber: "EK202",
+        originAirport: "DXB",
+        destinationAirport: "LHR",
+      },
+    },
+    exposureRepository: new FakeExposureRepository(),
+    operationsRepository: new FakeOperationsRepository(),
+    analyticsService: new FakeAnalyticsService(),
+    actionOrchestrator: { completeAction: async () => null },
+    auditStore: new FakeAuditStore(),
+    subscriptionRepository: new FakeSubscriptionRepository(),
+    reconciliationService: new FakeReconciliationService(),
+    oneRecordService: new FakeOneRecordService(),
+    authMiddleware: (_req, _res, next) => next(),
+  });
+
+  const routeLayer = router.stack.find(
+    (layer) => layer.route?.path === "/ulds" && layer.route?.methods?.post,
+  );
+  assert.ok(routeLayer, "Expected /ulds POST route");
+
+  const response = createResponseRecorder();
+  const req = {
+    headers: { "content-type": "application/ld+json" },
+    body: {
+      "@context": "https://onerecord.iata.org/ns/cargo",
+      "@type": "LogisticsObject",
+      serialNumber: "JTN-7890",
+    },
+  };
+
+  await routeLayer.route.stack[0].handle(req, response);
+
+  assert.equal(response.statusCode, 201);
+  assert.equal(response.headers["Content-Type"], "application/ld+json");
+  assert.equal(response.body.serialNumber, "JTN-7890");
+});
+
+test("strict JSON-LD create route rejects non JSON-LD content type", async () => {
+  const router = buildApiRouter({
+    config: {
+      auth: { disabled: true },
+      operations: {
+        airlineCode: "EK",
+        primaryFlightNumber: "EK202",
+        originAirport: "DXB",
+        destinationAirport: "LHR",
+      },
+    },
+    exposureRepository: new FakeExposureRepository(),
+    operationsRepository: new FakeOperationsRepository(),
+    analyticsService: new FakeAnalyticsService(),
+    actionOrchestrator: { completeAction: async () => null },
+    auditStore: new FakeAuditStore(),
+    subscriptionRepository: new FakeSubscriptionRepository(),
+    reconciliationService: new FakeReconciliationService(),
+    oneRecordService: new FakeOneRecordService(),
+    authMiddleware: (_req, _res, next) => next(),
+  });
+
+  const routeLayer = router.stack.find(
+    (layer) => layer.route?.path === "/ulds" && layer.route?.methods?.post,
+  );
+  assert.ok(routeLayer, "Expected /ulds POST route");
+
+  const response = createResponseRecorder();
+  const req = {
+    headers: { "content-type": "application/json" },
+    body: {
+      "@context": "https://onerecord.iata.org/ns/cargo",
+      "@type": "LogisticsObject",
+      serialNumber: "JTN-7890",
+    },
+  };
+
+  await routeLayer.route.stack[0].handle(req, response);
+
+  assert.equal(response.statusCode, 415);
+  assert.equal(response.body.error, "Content-Type must be application/ld+json");
 });
 
 function createResponseRecorder() {

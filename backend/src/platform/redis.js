@@ -3,6 +3,7 @@ import { logger } from "./logger.js";
 
 class InMemoryRedis {
   constructor() {
+    this.isInMemory = true;
     this.kv = new Map();
     this.lists = new Map();
     this.hashes = new Map();

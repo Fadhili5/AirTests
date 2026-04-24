@@ -13,6 +13,7 @@ export function buildApiRouter({
   authMiddleware,
 }) {
   const router = Router();
+  const strictJsonLdTypes = new Set(["application/ld+json"]);
 
   router.use(authMiddleware);
 
@@ -106,33 +107,57 @@ export function buildApiRouter({
     res.json([
       {
         id: config.operations.primaryFlightNumber,
+        flight_number: config.operations.primaryFlightNumber,
+        origin: config.operations.originAirport,
+        destination: config.operations.destinationAirport,
         route: `${config.operations.originAirport}-${config.operations.destinationAirport}`,
         airline: "Emirates",
-        status: "DELAYED",
+        aircraft: "B777F",
         aircraftType: "B777F",
-        delayMinutes: 37,
+        status: "Delayed",
+        delay_minutes: 48,
+        delayMinutes: 48,
       },
     ]);
   });
 
-  router.get("/one-record/ulds/:id", async (req, res) => {
+  async function getUldTwin(req, res) {
     const twin = await oneRecordService.getUld(req.params.id);
     if (!twin) {
       return res.status(404).json({ error: "ULD digital twin not found" });
     }
     res.setHeader("Content-Type", "application/ld+json");
     res.json(twin.payload || twin);
-  });
+  }
 
-  router.post("/one-record/ulds", async (req, res) => {
+  async function createUldTwin(req, res) {
+    const validation = validateJsonLdRequest(req, strictJsonLdTypes);
+    if (validation) {
+      return res.status(validation.status).json({ error: validation.error });
+    }
+
     const created = await oneRecordService.createUld(req.body);
+    res.setHeader("Content-Type", "application/ld+json");
     res.status(created ? 201 : 202).json(created || { queued: true });
-  });
+  }
 
-  router.patch("/one-record/ulds/:id", async (req, res) => {
+  async function updateUldTwin(req, res) {
+    const validation = validateJsonLdRequest(req, strictJsonLdTypes);
+    if (validation) {
+      return res.status(validation.status).json({ error: validation.error });
+    }
+
     const updated = await oneRecordService.updateUld(req.params.id, req.body);
+    res.setHeader("Content-Type", "application/ld+json");
     res.status(updated ? 200 : 202).json(updated || { queued: true });
-  });
+  }
+
+  router.get("/ulds/:id", getUldTwin);
+  router.post("/ulds", createUldTwin);
+  router.patch("/ulds/:id", updateUldTwin);
+  router.get("/one-record/ulds/:id", getUldTwin);
+  router.post("/one-record/ulds", createUldTwin);
+  router.patch("/one-record/ulds/:id", updateUldTwin);
 
   router.post("/alert/subscribe", async (req, res) => {
     const subscription = {
@@ -174,4 +199,34 @@ export function buildApiRouter({
   });
 
   return router;
+}
+
+function validateJsonLdRequest(req, strictJsonLdTypes) {
+  const contentType = String(req.headers["content-type"] || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+
+  if (!strictJsonLdTypes.has(contentType)) {
+    return {
+      status: 415,
+      error: "Content-Type must be application/ld+json",
+    };
+  }
+
+  if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+    return {
+      status: 400,
+      error: "JSON-LD object body required",
+    };
+  }
+
+  if (!req.body["@context"]) {
+    return {
+      status: 400,
+      error: "JSON-LD @context is required",
+    };
+  }
+
+  return null;
 }

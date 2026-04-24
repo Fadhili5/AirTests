@@ -91,10 +91,6 @@ export const config = {
   },
   verification: {
     enabled: toBool(process.env.VERIFICATION_ENABLED, true),
-    pollIntervalMs: Number.parseInt(
-      process.env.VERIFICATION_POLL_INTERVAL_MS || "2000",
-      10,
-    ),
     batchSize: Number.parseInt(process.env.VERIFICATION_BATCH_SIZE || "20", 10),
     temperatureDriftThresholdCelsius: Number.parseFloat(
       process.env.VERIFICATION_TEMPERATURE_DRIFT_C || "0.5",

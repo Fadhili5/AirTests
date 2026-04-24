@@ -33,7 +33,11 @@ const exposureRepository = new ExposureRepository(redis, config.retention.eventL
 const operationsRepository = new OperationsRepository(redis, config.retention.eventListLimit);
 const subscriptionRepository = new SubscriptionRepository(redis);
 const dlqRepository = new DlqRepository(redis);
-const verificationQueueRepository = new VerificationQueueRepository(redis);
+const verificationQueueRepository = new VerificationQueueRepository({
+  redis,
+  config,
+  logger,
+});
 const analyticsService = new AnalyticsService({
   exposureRepository,
   operationsRepository,
@@ -120,6 +124,6 @@ io.on("connection", async (socket) => {
 
 server.listen(config.port, () => {
   logger.info({ port: config.port }, "Backend listening");
-  reconciliationService.start();
+  void reconciliationService.start();
   mqttConsumer.start();
 });

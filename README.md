@@ -8,7 +8,7 @@ AeroSentinel is a production-style, multi-page air cargo exposure intelligence p
 - Scores predicted breach risk from telemetry, weather, and operational context
 - Generates role-based interventions with SLA deadlines and execution tracking
 - Adds ground handlers, cargo teams, supervisors, and cool-chain teams into the monitoring loop
-- Verifies Redis state against the ONE Record twin through a reconciliation queue
+- Verifies Redis state against the ONE Record twin through a BullMQ reconciliation queue
 - Maintains audit history for telemetry, interventions, notifications, and drift events
 - Streams incremental updates to a responsive, tablet-first multi-page operations UI with explicit map-tile failure banners
 
@@ -60,7 +60,7 @@ Each page has its own route, navigation state, and focused operational context:
 - Exposure engine with cumulative threshold tracking
 - Predictive risk scoring with remote service fallback
 - Intervention orchestration with assigned roles and verification-oriented lifecycle
-- Verification queue with drift rules for temperature, exposure, and risk level
+- BullMQ verification queue with drift rules for temperature, exposure, and risk level
 - Reconciliation worker to realign Redis and the ONE Record twin
 - Audit trail for telemetry, actions, workflows, notifications, and reconciliation
 
@@ -77,6 +77,9 @@ Implemented entities and extensions include:
 
 Supported backend endpoints include:
 
+- `GET /api/ulds/:id`
+- `POST /api/ulds`
+- `PATCH /api/ulds/:id`
 - `GET /api/one-record/ulds/:id`
 - `POST /api/one-record/ulds`
 - `PATCH /api/one-record/ulds/:id`
