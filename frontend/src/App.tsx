@@ -12,7 +12,6 @@ const AlertsPage = lazy(() => import("./pages/AlertsPage"));
 const InterventionsPage = lazy(() => import("./pages/InterventionsPage"));
 const AirportsPage = lazy(() => import("./pages/AirportsPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 function RouteErrorFallback({ name }: { name: string }) {
   return (
@@ -93,11 +92,7 @@ export function App() {
                   <AnalyticsPage />
                 </ErrorBoundary>
               } />
-              <Route path="/settings" element={
-                <ErrorBoundary fallback={<RouteErrorFallback name="Settings" />}>
-                  <SettingsPage />
-                </ErrorBoundary>
-              } />
+              <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </Suspense>
         </AppLayout>

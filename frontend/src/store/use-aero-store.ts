@@ -34,6 +34,7 @@ interface AeroState {
   timeline: TimelineEvent[];
   analyticsHistory: AnalyticsPoint[];
   assistantMessages: { id: string; role: "assistant" | "user"; text: string }[];
+  appendAssistantMessage: (message: { role: "assistant" | "user"; text: string }) => void;
   tickClock: (timestamp?: number) => void;
   setActiveTab: (tab: AppTab) => void;
   selectUld: (id: string) => void;
@@ -108,6 +109,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "Stand allocation delay",
       failurePoint: "Thermal buffer handoff",
       recommendedFix: "Move to controlled storage and expedite aircraft loading",
+      unitType: "Passive",
+      collaborationTeams: ["Ground Handler", "Cargo Team", "Supervisor"],
+      geofenceStage: "Tarmac",
     },
     {
       id: "ULD-5521",
@@ -131,6 +135,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "Customs processing queue",
       failurePoint: "Warehouse transfer cycle",
       recommendedFix: "Prioritize customs clearance and move to cold-room lane",
+      unitType: "Passive",
+      collaborationTeams: ["Cargo Team", "Cool Chain Team", "Supervisor"],
+      geofenceStage: "Warehouse",
     },
     {
       id: "ULD-2034",
@@ -154,6 +161,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "None active",
       failurePoint: "Cargo hold temperature hotspot",
       recommendedFix: "Continue airflow balancing and verify temp stability",
+      unitType: "Active",
+      collaborationTeams: ["Cargo Team", "Ops Control"],
+      geofenceStage: "Ramp Buffer",
     },
     {
       id: "ULD-4491",
@@ -177,6 +187,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "Ground handling equipment shortage",
       failurePoint: "Thermal curtain seal integrity",
       recommendedFix: "Deploy mobile cooling unit and prioritize bay allocation",
+      unitType: "Active",
+      collaborationTeams: ["Ground Handler", "Cargo Team", "Supervisor"],
+      geofenceStage: "Tarmac",
     },
     {
       id: "ULD-8812",
@@ -200,6 +213,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "Documentation verification delay",
       failurePoint: "Cold chain continuity at transfer point",
       recommendedFix: "Expedite customs release and redirect to priority cold storage",
+      unitType: "Passive",
+      collaborationTeams: ["Cargo Team", "Cool Chain Team"],
+      geofenceStage: "Cool Chain Centre",
     },
     {
       id: "ULD-1156",
@@ -223,6 +239,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "None active",
       failurePoint: "No active failure point",
       recommendedFix: "Maintain current airflow profile and monitor descent phase",
+      unitType: "Active",
+      collaborationTeams: ["Cargo Team", "Ops Control"],
+      geofenceStage: "Ramp Buffer",
     },
     {
       id: "ULD-3367",
@@ -246,6 +265,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "De-icing queue priority",
       failurePoint: "Passive insulation degradation",
       recommendedFix: "Schedule expedited loading and verify gel pack integrity",
+      unitType: "Passive",
+      collaborationTeams: ["Ground Handler", "Cargo Team"],
+      geofenceStage: "Tarmac",
     },
     {
       id: "ULD-9903",
@@ -269,6 +291,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       delaySource: "Baggage system malfunction affecting cargo bay access",
       failurePoint: "Multi-point thermal breach during extended ramp hold",
       recommendedFix: "Emergency transfer to climate-controlled bay and notify pharma customer",
+      unitType: "Passive",
+      collaborationTeams: ["Ground Handler", "Cargo Team", "Supervisor", "Cool Chain Team"],
+      geofenceStage: "Tarmac",
     },
   ],
   tasks: [
@@ -281,16 +306,20 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       dueAt: new Date(Date.now() + 8 * 60000).toISOString(),
       status: "Pending",
       priority: "Critical",
+      workflow: "Geo-fence",
+      team: "Ground Handler",
     },
     {
       id: "task-2",
       uldId: "ULD-5521",
       action: "Prioritize customs clearance",
-      role: "Supervisor",
+      role: "Cargo Team",
       windowMinutes: 16,
       dueAt: new Date(Date.now() + 16 * 60000).toISOString(),
       status: "In Progress",
       priority: "High",
+      workflow: "IoT Portal",
+      team: "Cargo Team",
     },
   ],
   alerts: [
@@ -301,6 +330,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       title: "Threshold breach predicted",
       detail: "Projected thermal threshold breach in 18 minutes on Tarmac 2.",
       timestamp: new Date().toISOString(),
+      targetTeams: ["Ground Handler", "Cargo Team", "Supervisor"],
+      workflow: "Geo-fence",
+      responseType: "Move Passive ULD",
     },
     {
       id: "alert-2",
@@ -309,6 +341,9 @@ export const useAeroStore = create<AeroState>((set, get) => ({
       title: "Ground delay detected",
       detail: "Warehouse dwell time exceeded recommended thermal recovery interval.",
       timestamp: new Date(Date.now() - 11 * 60000).toISOString(),
+      targetTeams: ["Cargo Team", "Cool Chain Team"],
+      workflow: "Thermal Imaging",
+      responseType: "Inspect Hot Spot",
     },
   ],
   inventory: [
@@ -358,6 +393,13 @@ export const useAeroStore = create<AeroState>((set, get) => ({
     },
   ],
   analyticsHistory: buildAnalyticsHistorySeed(),
+  appendAssistantMessage: (message) =>
+    set((state) => ({
+      assistantMessages: [
+        ...state.assistantMessages,
+        { id: crypto.randomUUID(), role: message.role, text: message.text },
+      ],
+    })),
   tickClock: (timestamp) => set({ now: timestamp ?? Date.now() }),
   setActiveTab: (activeTab) => set({ activeTab }),
   selectUld: (selectedUldId) => set({ selectedUldId }),

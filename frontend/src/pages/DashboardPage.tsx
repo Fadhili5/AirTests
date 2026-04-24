@@ -113,7 +113,6 @@ export default function DashboardPage() {
                   { path: "/interventions", label: "Interventions", icon: "IN" },
                   { path: "/airports", label: "Airports", icon: "AP" },
                   { path: "/analytics", label: "Analytics", icon: "AN" },
-                  { path: "/settings", label: "Settings", icon: "ST" },
                 ].map((item) => (
                   <Link
                     key={item.path}

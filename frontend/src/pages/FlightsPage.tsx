@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { cn } from "../lib/utils";
 import { useAeroStore } from "../store/use-aero-store";
@@ -114,36 +114,38 @@ export default function FlightsPage() {
             </svg>
             <div className="relative mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
               {liveFlights.map((flight) => (
-                <div key={`${flight.id}-summary`} className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 backdrop-blur">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-blue-600">{flight.id}</p>
-                      <h3 className="text-base font-semibold text-slate-900">{flight.route}</h3>
+                <Flight3DPanel key={`${flight.id}-summary`}>
+                  <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 backdrop-blur">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-blue-600">{flight.id}</p>
+                        <h3 className="text-base font-semibold text-slate-900">{flight.route}</h3>
+                      </div>
+                      <span className={cn(
+                        "rounded-full px-3 py-1 text-xs font-medium",
+                        flight.delayDrift >= 25 ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"
+                      )}>
+                        {flight.status} • {flight.delayDrift}m
+                      </span>
                     </div>
-                    <span className={cn(
-                      "rounded-full px-3 py-1 text-xs font-medium",
-                      flight.delayDrift >= 25 ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"
-                    )}>
-                      {flight.status} • {flight.delayDrift}m
-                    </span>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-600">
+                        <span>{flight.aircraft}</span>
+                        <span>ETA {flight.upliftWindow}</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-blue-600 transition-all duration-1000"
+                          style={{ width: `${Math.max(8, flight.progress * 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>{Math.round(flight.progress * 100)}% corridor complete</span>
+                        <span>{flight.etaMinutes} min remaining</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-600">
-                      <span>{flight.aircraft}</span>
-                      <span>ETA {flight.upliftWindow}</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full rounded-full bg-blue-600 transition-all duration-1000"
-                        style={{ width: `${Math.max(8, flight.progress * 100)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>{Math.round(flight.progress * 100)}% corridor complete</span>
-                      <span>{flight.etaMinutes} min remaining</span>
-                    </div>
-                  </div>
-                </div>
+                </Flight3DPanel>
               ))}
             </div>
           </div>
@@ -159,22 +161,24 @@ export default function FlightsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {liveFlights.map((flight) => (
-            <div key={`${flight.id}-timeline`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-blue-600">{flight.id}</p>
-                  <p className="text-sm font-medium text-slate-900">{flight.route}</p>
+            <Flight3DPanel key={`${flight.id}-timeline`}>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-blue-600">{flight.id}</p>
+                    <p className="text-sm font-medium text-slate-900">{flight.route}</p>
+                  </div>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                    Live Lane
+                  </span>
                 </div>
-                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
-                  Live Lane
-                </span>
+                <div className="mt-3 space-y-3">
+                  <Metric label="Thermal Context" value={flight.thermalContext} />
+                  <Metric label="Transfer Risk" value={flight.transferRisk} />
+                  <Metric label="Current Phase" value={`${flight.status} • ${flight.etaMinutes} min to handoff`} />
+                </div>
               </div>
-              <div className="mt-3 space-y-3">
-                <Metric label="Thermal Context" value={flight.thermalContext} />
-                <Metric label="Transfer Risk" value={flight.transferRisk} />
-                <Metric label="Current Phase" value={`${flight.status} • ${flight.etaMinutes} min to handoff`} />
-              </div>
-            </div>
+            </Flight3DPanel>
           ))}
         </CardContent>
       </Card>
@@ -215,6 +219,35 @@ function AirportNode({
         {label}
       </text>
     </g>
+  );
+}
+
+function Flight3DPanel({ children }: { children: React.ReactNode }) {
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+
+  return (
+    <div
+      className="transform-gpu [perspective:1200px]"
+      onMouseMove={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        setTilt({
+          rotateX: (0.5 - y) * 12,
+          rotateY: (x - 0.5) * 14,
+        });
+      }}
+      onMouseLeave={() => setTilt({ rotateX: 0, rotateY: 0 })}
+    >
+      <div
+        className="transition-transform duration-200 ease-out will-change-transform"
+        style={{
+          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) translateZ(0)`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 

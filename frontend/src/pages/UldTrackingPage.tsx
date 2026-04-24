@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { PageError } from "../components/ui/PageError";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
-import { MapContainer, TileLayer, CircleMarker, Popup, Circle, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapStatusBanner } from "../components/ui/MapStatusBanner";
 
 export default function UldTrackingPage() {
   const { ulds, flashes } = useAeroStore();
   const [selectedUldId, setSelectedUldId] = useState(ulds[0]?.id || null);
   const [filterRisk, setFilterRisk] = useState<"ALL" | "HIGH" | "MEDIUM" | "LOW">("ALL");
+  const [tileError, setTileError] = useState(false);
 
   const filteredUlds = useMemo(() => {
     try {
@@ -43,7 +44,8 @@ export default function UldTrackingPage() {
           </div>
         </CardHeader>
         <CardContent className="flex-1 min-h-[280px] md:min-h-[300px]">
-          <div className="h-full w-full overflow-hidden rounded-2xl border border-slate-200">
+          <div className="relative h-full w-full overflow-hidden rounded-2xl border border-slate-200">
+            <MapStatusBanner tileError={tileError} />
             <MapContainer
               center={center as [number, number]}
               zoom={3}
@@ -53,6 +55,10 @@ export default function UldTrackingPage() {
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              eventHandlers={{
+                tileerror: () => setTileError(true),
+                tileload: () => setTileError(false),
+              }}
             />
             {ulds.map((uld) => (
               <CircleMarker
@@ -104,6 +110,9 @@ export default function UldTrackingPage() {
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
                 <span>Temp: {uld.currentTemp}°C</span>
                 <span>Exposure: {uld.totalExposure}min</span>
+                <span>Type: {uld.unitType ?? "Passive"}</span>
+                <span>Geo-fence: {uld.geofenceStage ?? "Ramp Buffer"}</span>
+                <span className="col-span-2">Teams: {(uld.collaborationTeams ?? ["Ground Handler"]).join(", ")}</span>
               </div>
             </div>
           ))}

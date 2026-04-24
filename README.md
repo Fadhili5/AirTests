@@ -7,9 +7,10 @@ AeroSentinel is a production-style, multi-page air cargo exposure intelligence p
 - Tracks cumulative tarmac, ground-delay, transfer, and in-flight exposure for ULDs
 - Scores predicted breach risk from telemetry, weather, and operational context
 - Generates role-based interventions with SLA deadlines and execution tracking
+- Adds ground handlers, cargo teams, supervisors, and cool-chain teams into the monitoring loop
 - Verifies Redis state against the ONE Record twin through a reconciliation queue
 - Maintains audit history for telemetry, interventions, notifications, and drift events
-- Streams incremental updates to a responsive, tablet-first multi-page operations UI
+- Streams incremental updates to a responsive, tablet-first multi-page operations UI with explicit map-tile failure banners
 
 ## Architecture
 
@@ -41,7 +42,6 @@ The frontend is a real multi-page dashboard, not a single-screen mockup. Current
 - `/alerts`
 - `/airports`
 - `/analytics`
-- `/settings`
 
 Each page has its own route, navigation state, and focused operational context:
 
@@ -49,7 +49,7 @@ Each page has its own route, navigation state, and focused operational context:
 - `Flights`: Emirates-style long-haul flight control context
 - `ULD Tracking`: live fleet map and ULD status cards
 - `Exposure`: cumulative thermal exposure intelligence
-- `Interventions`: action queue, assignment, SLA, and execution state
+- `Interventions`: action queue, team collaboration, Gemini copilot, SLA, and execution state
 - `Alerts`: risk events and escalation monitoring
 - `Airports`: airport and zone-level bottleneck views
 - `Analytics`: compliance and exposure performance
@@ -119,10 +119,10 @@ ONE_RECORD_ENABLED=false \
 npm run dev:backend
 ```
 
-3. Start the frontend:
+3. Build the frontend for the backend-served SPA entrypoint:
 
 ```bash
-npm run dev:frontend -- --host 0.0.0.0
+npm --workspace frontend run build
 ```
 
 4. Start the simulator to generate telemetry:
@@ -133,8 +133,7 @@ MQTT_URL=mqtt://localhost:1883 npm run dev:simulator
 
 ### Local Endpoints
 
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:3000`
+- App + Backend API: `http://localhost:3000`
 - Metrics: `http://localhost:3000/metrics`
 - Health: `http://localhost:3000/api/health`
 

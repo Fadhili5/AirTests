@@ -28,7 +28,26 @@ export function buildApp({
 }) {
   const app = express();
   app.use(cors());
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          fontSrc: ["'self'", "https:", "data:"],
+          formAction: ["'self'"],
+          frameAncestors: ["'self'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          objectSrc: ["'none'"],
+          scriptSrc: ["'self'"],
+          scriptSrcAttr: ["'none'"],
+          styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+          connectSrc: ["'self'", "https://generativelanguage.googleapis.com", "ws:", "wss:"],
+          upgradeInsecureRequests: null,
+        },
+      },
+    }),
+  );
   app.use(express.json());
   app.use(pinoHttp({ logger }));
 

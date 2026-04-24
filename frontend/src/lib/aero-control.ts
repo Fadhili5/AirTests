@@ -65,14 +65,6 @@ export const routes = [
     title: "Compliance & Exposure Metrics",
     description: "System-wide trends, compliance scoring, and performance insights.",
   },
-  {
-    path: "/settings",
-    label: "Settings",
-    icon: "ST",
-    eyebrow: "Settings",
-    title: "System Configuration",
-    description: "Threshold tuning, user roles, and API/system configuration settings.",
-  },
 ] as const;
 
 export function routeMeta(pathname: string) {
@@ -110,6 +102,11 @@ export function mapFleetToUld(item: any): UldExposure {
     delaySource: item.operationalContext?.delayDetected ? "Ramp / customs bottleneck" : "No active delay source",
     failurePoint: item.operationalContext?.handlingGap ? "Handling idle gap" : "No active failure point",
     recommendedFix: item.operationalContext?.handlingGap ? "Apply thermal cover and re-sequence handling" : "Continue monitoring",
+    unitType: item.containerType === "ACTIVE" ? "Active" : "Passive",
+    collaborationTeams: item.operationalContext?.delayDetected
+      ? ["Ground Handler", "Cargo Team", "Supervisor"]
+      : ["Cargo Team", "Ops Control"],
+    geofenceStage: item.operationalContext?.delayDetected ? "Tarmac" : "Warehouse",
   };
 }
 
@@ -138,6 +135,11 @@ export function mapTelemetryToUld(event: any): UldExposure {
     delaySource: status.operationalContext?.delayDetected ? "Airport dwell bottleneck" : "None active",
     failurePoint: status.operationalContext?.handlingGap ? "Handling idle gap" : "No active failure point",
     recommendedFix: status.operationalContext?.handlingGap ? "Escalate handling and thermal cover" : "Continue observation",
+    unitType: status.containerType === "ACTIVE" ? "Active" : "Passive",
+    collaborationTeams: status.operationalContext?.delayDetected
+      ? ["Ground Handler", "Cargo Team", "Supervisor"]
+      : ["Cargo Team", "Ops Control"],
+    geofenceStage: status.operationalContext?.delayDetected ? "Tarmac" : "Warehouse",
   };
 }
 
@@ -166,6 +168,15 @@ export function mapActionToTask(action: any): InterventionTask {
         : action.priority === "HIGH" || action.priority === "PREVENTIVE"
           ? "High"
           : "Normal",
+    workflow: action.source === "THERMAL_IMAGING" ? "Thermal Imaging" : action.source === "GEOFENCE" ? "Geo-fence" : "IoT Portal",
+    team:
+      action.assignedRole === "Ground Handler"
+        ? "Ground Handler"
+        : action.assignedRole === "Cargo Team"
+          ? "Cargo Team"
+          : action.priority === "CRITICAL"
+            ? "Supervisor"
+            : "Ops Control",
   };
 }
 
@@ -177,6 +188,9 @@ export function mapAlertItem(alert: any, fallbackUldId: string): AlertItem {
     title: alert.message || alert.status,
     detail: alert.message || "Realtime alert triggered.",
     timestamp: alert.occurred_at || new Date().toISOString(),
+    targetTeams: alert.status === "BREACH" ? ["Ground Handler", "Cargo Team", "Supervisor"] : ["Cargo Team", "Ops Control"],
+    workflow: alert.source === "THERMAL_IMAGING" ? "Thermal Imaging" : alert.source === "GEOFENCE" ? "Geo-fence" : "In-Built Alert",
+    responseType: alert.containerType === "ACTIVE" ? "Adjust Active ULD" : "Move Passive ULD",
   };
 }
 
@@ -290,14 +304,6 @@ export function groupTimelineByUld(timeline: TimelineEvent[], selected?: string)
 
 export function sortTasksByDue(tasks: InterventionTask[]) {
   return [...tasks].sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
-}
-
-export function makeSystemSettings() {
-  return [
-    { group: "Risk Thresholds", rows: ["High risk score >= 0.80", "Prediction escalation < 20 min", "Tarmac dwell watch > 12 min"] },
-    { group: "User Roles", rows: ["Handler / Supervisor / Ops Control", "Realtime action routing enabled", "Audit trail retention active"] },
-    { group: "API Configuration", rows: ["Socket.IO live feed connected", "MQTT ingestion online", "Offline queue synchronization enabled"] },
-  ];
 }
 
 export function makeAirportSummary(ulds: UldExposure[]) {

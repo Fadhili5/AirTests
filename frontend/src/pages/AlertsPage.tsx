@@ -83,6 +83,25 @@ export default function AlertsPage() {
                   <SeverityBadge level={alert.level} />
                 </div>
                 <p className="mt-1 text-xs text-slate-600">{alert.detail}</p>
+                {(alert.targetTeams?.length || alert.workflow || alert.responseType) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {alert.targetTeams?.map((team) => (
+                      <span key={team} className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+                        {team}
+                      </span>
+                    ))}
+                    {alert.workflow && (
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                        {alert.workflow}
+                      </span>
+                    )}
+                    {alert.responseType && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                        {alert.responseType}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {!acknowledged.has(alert.id) && (
                   <button
                     onClick={() => handleAcknowledge(alert.id)}

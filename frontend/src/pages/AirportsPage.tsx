@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { useAeroStore } from "../store/use-aero-store";
 import { cn } from "../lib/utils";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapStatusBanner } from "../components/ui/MapStatusBanner";
 
 export default function AirportsPage() {
   const { ulds } = useAeroStore();
+  const [tileError, setTileError] = useState(false);
 
   const airportSummary = useMemo(() => {
     try {
@@ -53,7 +55,8 @@ export default function AirportsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-[320px] w-full overflow-hidden rounded-2xl border border-slate-200 md:h-[380px]">
+          <div className="relative h-[320px] w-full overflow-hidden rounded-2xl border border-slate-200 md:h-[380px]">
+            <MapStatusBanner tileError={tileError} />
             <MapContainer
               center={[25, 10]}
               zoom={2}
@@ -63,6 +66,10 @@ export default function AirportsPage() {
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                eventHandlers={{
+                  tileerror: () => setTileError(true),
+                  tileload: () => setTileError(false),
+                }}
               />
               {airports.map((airport) => (
                 <CircleMarker
@@ -108,6 +115,10 @@ export default function AirportsPage() {
                 <span>Delay Hotspots</span>
                 <span className={ap.delayHotspots > 0 ? "text-amber-700" : "text-emerald-700"}>
                   {ap.delayHotspots}
+                </span>
+                <span>Ground Teams</span>
+                <span className="text-slate-900">
+                  {ulds.filter((uld) => uld.airport === ap.airport && (uld.collaborationTeams ?? []).includes("Ground Handler")).length}
                 </span>
                 <span>Avg Risk Score</span>
                 <span className={ap.avgRisk >= 0.75 ? "text-rose-700" : ap.avgRisk >= 0.5 ? "text-amber-700" : "text-emerald-700"}>
