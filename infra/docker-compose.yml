@@ -45,13 +45,17 @@ services:
       - "8081:8080"
 
   ne-one-server:
-    image: ghcr.io/ddoeppner/ne-one-server:latest
+    image: git.openlogisticsfoundation.org:5050/wg-digitalaircargo/ne-one:latest
     depends_on:
-      - graphdb
       - keycloak
     environment:
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/or-atm
-      GRAPHDB_URL: http://graphdb:7200
+      LO_ID_CONFIG_HOST: localhost
+      LO_ID_CONFIG_SCHEME: http
+      LO_ID_CONFIG_PORT: 8080
+      LO_ID_CONFIG_ROOT_PATH: /
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak:8081/realms/or-atm
+      QUARKUS_OIDC_CLIENT_ID: ne-one
+      QUARKUS_OIDC_CLIENT_SECRET: ne-one-secret
     ports:
       - "8080:8080"
 

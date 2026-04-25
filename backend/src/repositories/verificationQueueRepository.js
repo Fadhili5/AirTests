@@ -7,7 +7,7 @@ export class VerificationQueueRepository {
     this.logger = logger;
     this.auditKey = "verification:audits";
     this.failureKey = "verification:failures";
-    this.queueName = "verification:jobs";
+    this.queueName = "verification-jobs";
     this.localQueue = [];
     this.localProcessor = null;
     this.localDrainScheduled = false;
