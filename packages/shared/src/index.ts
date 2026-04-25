@@ -1,166 +1,128 @@
 import { z } from "zod";
 
-export const employmentStatuses = [
-  "EMPLOYED",
-  "SELF_EMPLOYED",
-  "UNEMPLOYED",
-  "STUDENT",
-  "CONTRACT"
-] as const;
+export const oneRecordIngestSchema = z.object({
+  source: z.string().min(2).default("manual"),
+  document: z.record(z.any())
+});
 
-export const verificationStatuses = [
-  "PENDING",
-  "KYC_SUBMITTED",
+export const interventionStatusValues = [
+  "OPEN",
+  "ACKNOWLEDGED",
+  "IN_PROGRESS",
+  "COMPLETED",
   "VERIFIED",
-  "REJECTED",
-  "MANUAL_REVIEW"
+  "FAILED"
 ] as const;
 
-export const loanStatuses = [
-  "DRAFT",
-  "UNDER_REVIEW",
-  "APPROVED",
-  "REJECTED",
-  "MANUAL_REVIEW",
-  "DISBURSEMENT_PENDING",
-  "DISBURSED",
-  "REPAID",
-  "OVERDUE"
-] as const;
+export const alertSeverityValues = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 
-export const transactionTypes = [
-  "VERIFICATION_HOLD",
-  "VERIFICATION_RELEASE",
-  "LOAN_DISBURSEMENT",
-  "REPAYMENT",
-  "WALLET_WITHDRAWAL",
-  "REFUND"
-] as const;
-
-const phoneSchema = z
-  .string()
-  .regex(/^(?:\+?254|0)?7\d{8}$/, "Use a valid Safaricom mobile number");
-
-export const telegramAuthSchema = z.object({
-  initData: z.string().min(10)
+export const liveQuerySchema = z.object({
+  query: z.string().min(3).max(500)
 });
 
-export const profileSchema = z.object({
-  fullName: z.string().min(4).max(120),
-  phoneNumber: phoneSchema,
-  dateOfBirth: z.string().datetime()
+export const telemetryIngestSchema = z.object({
+  pieceId: z.string().min(1),
+  internalTempC: z.number().optional(),
+  externalTempC: z.number().optional(),
+  humidity: z.number().optional(),
+  exposureMinutes: z.number().int().nonnegative().default(0),
+  sunlight: z.string().optional(),
+  tiltDegrees: z.number().optional(),
+  source: z.string().min(2).default("lufthansa-passive")
 });
 
-export const kycSchema = z.object({
-  nationalId: z.string().regex(/^\d{7,8}$/),
-  mpesaNumber: phoneSchema
+export const custodyIngestSchema = z.object({
+  pieceId: z.string().min(1),
+  fromZone: z.string().optional(),
+  toZone: z.string().optional(),
+  handler: z.string().optional(),
+  verifiedBy: z.string().optional(),
+  status: z.string().min(2),
+  outOfChainMinutes: z.number().int().nonnegative().default(0),
+  tamperProbability: z.number().min(0).max(1).default(0),
+  reloadMatchScore: z.number().min(0).max(1).default(1),
+  identityConfidence: z.number().min(0).max(1).default(1)
 });
 
-export const employmentSchema = z.object({
-  employmentStatus: z.enum(employmentStatuses),
-  monthlyIncome: z.number().positive().max(10000000)
+export const ackInterventionSchema = z.object({
+  status: z.enum(interventionStatusValues),
+  verificationNotes: z.string().max(1000).optional(),
+  assignee: z.string().min(2).max(120).optional()
 });
 
-export const holdSchema = z.object({
-  phoneNumber: phoneSchema.optional()
-});
+export type IngestRequest = z.infer<typeof oneRecordIngestSchema>;
+export type LiveQueryRequest = z.infer<typeof liveQuerySchema>;
+export type TelemetryIngestRequest = z.infer<typeof telemetryIngestSchema>;
+export type CustodyIngestRequest = z.infer<typeof custodyIngestSchema>;
+export type AckInterventionRequest = z.infer<typeof ackInterventionSchema>;
 
-export const loanApplySchema = z.object({
-  requestedAmount: z.number().positive().max(500000),
-  durationDays: z.number().int().min(7).max(90)
-});
+export type ShipmentSummary = {
+  shipmentId: string;
+  awb: string | null;
+  revision: number;
+  pieceCount: number;
+  activeAlerts: number;
+  chainOfCustodyScore: number;
+  thermalRiskScore: number;
+  integrityScore: number;
+  specialHandlingCodes: string[];
+  currentLocation: string | null;
+};
 
-export const withdrawSchema = z.object({
-  amount: z.number().positive().max(1000000),
-  mpesaNumber: phoneSchema.optional()
-});
-
-export const repaySchema = z.object({
-  amount: z.number().positive().max(1000000)
-});
-
-export type EmploymentStatusValue = (typeof employmentStatuses)[number];
-export type LoanStatusValue = (typeof loanStatuses)[number];
-export type TransactionTypeValue = (typeof transactionTypes)[number];
-export type ProfileInput = z.infer<typeof profileSchema>;
-export type KycInput = z.infer<typeof kycSchema>;
-export type EmploymentInput = z.infer<typeof employmentSchema>;
-export type LoanApplyInput = z.infer<typeof loanApplySchema>;
-export type WithdrawInput = z.infer<typeof withdrawSchema>;
-export type RepayInput = z.infer<typeof repaySchema>;
-
-export type DashboardResponse = {
-  user: {
-    id: string;
-    telegramId: string;
-    username: string | null;
-    fullName: string | null;
-    nationalId: string | null;
-    phoneNumber: string | null;
-    mpesaNumber: string | null;
-    dateOfBirth: string | null;
-    employmentStatus: EmploymentStatusValue | null;
-    monthlyIncome: number | null;
-    riskScore: number;
-    verificationStatus: string;
-    createdAt: string;
-    updatedAt: string;
+export type DashboardSnapshot = {
+  updatedAt: string;
+  kpis: {
+    shipments: number;
+    pieces: number;
+    flights: number;
+    ulds: number;
+    alertsOpen: number;
+    interventionsOpen: number;
+    thermalBreaches: number;
+    custodyBreaks: number;
   };
-  wallet: {
-    balance: number;
-    heldAmount: number;
-    refundableAmount: number;
-    status: string;
-  } | null;
-  latestApplication: {
+  shipments: ShipmentSummary[];
+  tape: Array<{
     id: string;
-    requestedAmount: number;
-    approvedAmount: number | null;
-    interestRate: number | null;
-    durationDays: number;
-    dueDate: string | null;
-    repaymentTotal: number | null;
-    status: string;
-    rejectionReason: string | null;
-    createdAt: string;
-    updatedAt: string;
-    disbursedAt: string | null;
-    repaidAt: string | null;
-  } | null;
-  latestAssessment: {
-    score: number;
-    duplicateCheck: boolean;
-    fraudFlag: boolean;
-    reviewStatus: string;
-    notes: Record<string, unknown> | null;
-    createdAt: string;
-  } | null;
-  transactions: Array<{
-    id: string;
+    occurredAt: string;
     type: string;
-    amount: number;
-    reference: string;
-    status: string;
-    narrative: string | null;
+    pieceId: string | null;
+    shipmentId: string;
+    location: string | null;
+    message: string;
+    severity: (typeof alertSeverityValues)[number] | "INFO";
+  }>;
+  alerts: Array<{
+    id: string;
+    shipmentId: string | null;
+    pieceId: string | null;
+    type: string;
+    severity: (typeof alertSeverityValues)[number];
+    title: string;
+    description: string;
     createdAt: string;
+  }>;
+  ulds: Array<{
+    id: string;
+    serialNumber: string;
+    flightNumber: string | null;
+    locationCode: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    complianceStatus: string;
+    riskLevel: string;
+    riskScore: number;
+    exposureRemainingMinutes: number;
   }>;
 };
 
-export const formatKes = (amount: number): string =>
-  new Intl.NumberFormat("en-KE", {
-    style: "currency",
-    currency: "KES",
-    minimumFractionDigits: 2
-  }).format(amount);
-
-export const normalizeKenyanPhone = (raw: string): string => {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.startsWith("254")) {
-    return digits;
-  }
-  if (digits.startsWith("0")) {
-    return `254${digits.slice(1)}`;
-  }
-  return `254${digits}`;
+export type AgentQueryResponse = {
+  summary: string;
+  matches: Array<{
+    entity: "shipment" | "piece" | "event" | "alert" | "intervention" | "uld";
+    id: string;
+    title: string;
+    subtitle: string;
+    confidence: number;
+  }>;
 };
-

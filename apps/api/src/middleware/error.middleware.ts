@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
-import { HttpError } from "../utils/http-error";
+
+type StatusError = Error & { statusCode?: number };
 
 export const errorMiddleware = (
   error: unknown,
@@ -16,16 +17,9 @@ export const errorMiddleware = (
     return;
   }
 
-  if (error instanceof HttpError) {
-    res.status(error.statusCode).json({
-      message: error.message
-    });
-    return;
-  }
-
+  const statusCode: number =
+    typeof (error as StatusError)?.statusCode === "number" ? (error as StatusError).statusCode ?? 500 : 500;
   const message = error instanceof Error ? error.message : "Unexpected server error";
-  res.status(500).json({
-    message
-  });
-};
 
+  res.status(statusCode).json({ message });
+};

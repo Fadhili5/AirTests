@@ -7,167 +7,368 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum EmploymentStatus {
-  EMPLOYED
-  SELF_EMPLOYED
-  UNEMPLOYED
-  STUDENT
-  CONTRACT
+enum FlightStatus {
+  SCHEDULED
+  BOARDING
+  DELAYED
+  AIRBORNE
+  LANDED
+  COMPLETED
+  CANCELLED
 }
 
-enum VerificationStatus {
-  PENDING
-  KYC_SUBMITTED
+enum EventType {
+  SCANNED_IN
+  SCANNED_OUT
+  RFID_VERIFIED
+  MOVED
+  STORED
+  LOADED
+  REMOVED
+  RELOADED
+  OPENED
+  INSPECTED
+  DELIVERED
+  CUSTODY_TRANSFER
+  THERMAL_UPDATE
+  CUSTOMS_HOLD
+  ALERT_RAISED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum InterventionStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  COMPLETED
   VERIFIED
-  REJECTED
-  MANUAL_REVIEW
-}
-
-enum WalletStatus {
-  ACTIVE
-  SUSPENDED
-  CLOSED
-}
-
-enum LoanStatus {
-  DRAFT
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-  MANUAL_REVIEW
-  DISBURSEMENT_PENDING
-  DISBURSED
-  REPAID
-  OVERDUE
-}
-
-enum TransactionType {
-  VERIFICATION_HOLD
-  VERIFICATION_RELEASE
-  LOAN_DISBURSEMENT
-  REPAYMENT
-  WALLET_WITHDRAWAL
-  REFUND
-}
-
-enum TransactionStatus {
-  PENDING
-  SUCCESS
   FAILED
-  REVERSED
-  MANUAL_REVIEW
 }
 
-enum ReviewStatus {
+enum RiskLevel {
+  LOW
+  GUARDED
+  ELEVATED
+  HIGH
+  CRITICAL
+}
+
+enum SyncStatus {
   PENDING
-  PASSED
+  SYNCED
   FAILED
-  MANUAL_REVIEW
+  DRIFT_DETECTED
 }
 
-enum UserRole {
-  CUSTOMER
-  ADMIN
-  SUPPORT
+model Airport {
+  code        String   @id
+  name        String
+  country     String
+  timezone    String
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  originFor   Flight[] @relation("flight_origin")
+  destinationFor Flight[] @relation("flight_destination")
 }
 
-model User {
-  id                 String              @id @default(cuid())
-  telegramId         String              @unique
-  username           String?
-  fullName           String?
-  nationalId         String?             @unique
-  phoneNumber        String?             @unique
-  mpesaNumber        String?
-  dateOfBirth        DateTime?
-  employmentStatus   EmploymentStatus?
-  monthlyIncome      Decimal?            @db.Decimal(12, 2)
-  riskScore          Int                 @default(0)
-  verificationStatus VerificationStatus  @default(PENDING)
-  role               UserRole            @default(CUSTOMER)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  applications       LoanApplication[]
-  wallet             Wallet?
-  transactions       Transaction[]
-  riskAssessments    RiskAssessment[]
-  sessions           Session[]
+model Flight {
+  id                 String       @id @default(cuid())
+  flightNumber       String       @unique
+  callsign           String?
+  originCode         String
+  destinationCode    String
+  status             FlightStatus @default(SCHEDULED)
+  scheduledDeparture DateTime
+  scheduledArrival   DateTime
+  actualDeparture    DateTime?
+  actualArrival      DateTime?
+  aircraftCode       String?
+  metadata           Json?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  origin             Airport      @relation("flight_origin", fields: [originCode], references: [code])
+  destination        Airport      @relation("flight_destination", fields: [destinationCode], references: [code])
+  ulds               Uld[]
+
+  @@index([status])
 }
 
-model LoanApplication {
-  id              String      @id @default(cuid())
-  userId          String
-  requestedAmount Decimal     @db.Decimal(12, 2)
-  approvedAmount  Decimal?    @db.Decimal(12, 2)
-  interestRate    Decimal?    @db.Decimal(5, 2)
-  durationDays    Int
-  dueDate         DateTime?
-  repaymentTotal  Decimal?    @db.Decimal(12, 2)
-  status          LoanStatus  @default(DRAFT)
-  rejectionReason String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  disbursedAt     DateTime?
-  repaidAt        DateTime?
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions    Transaction[]
+model Shipment {
+  id                    String        @id
+  revision              Int           @default(0)
+  objectType            String        @default("Shipment")
+  awb                   String?
+  weightPayment         String?
+  otherCharges          String?
+  source                String
+  pieceCount            Int           @default(0)
+  currentLocation       String?
+  customsStatus         String?
+  chainOfCustodyScore   Float         @default(1)
+  thermalRiskScore      Float         @default(0)
+  integrityScore        Float         @default(1)
+  delayPredictionMin    Int           @default(0)
+  theftRiskScore        Float         @default(0)
+  specialHandlingCodes  String[]
+  rawDocument           Json
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  waybill               Waybill?
+  pieces                Piece[]
+  ulds                  Uld[]
+  events                Event[]
+  riskStates            RiskState[]
+  alerts                Alert[]
+  interventions         Intervention[]
 
-  @@index([userId, status])
+  @@index([awb])
+  @@index([currentLocation])
 }
 
-model Wallet {
-  id               String       @id @default(cuid())
-  userId           String       @unique
-  balance          Decimal      @default(0) @db.Decimal(12, 2)
-  heldAmount       Decimal      @default(0) @db.Decimal(12, 2)
-  refundableAmount Decimal      @default(0) @db.Decimal(12, 2)
-  status           WalletStatus @default(ACTIVE)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Waybill {
+  id             String   @id @default(cuid())
+  shipmentId     String   @unique
+  awb            String?
+  weightPayment  String?
+  otherCharges   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  shipment       Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  pieces         Piece[]
 }
 
-model Transaction {
-  id                String            @id @default(cuid())
-  userId            String
-  loanApplicationId String?
-  type              TransactionType
-  amount            Decimal           @db.Decimal(12, 2)
-  reference         String            @unique
-  providerReference String?
-  status            TransactionStatus @default(PENDING)
-  narrative         String?
-  metadata          Json?
-  idempotencyKey    String?           @unique
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  loanApplication   LoanApplication?  @relation(fields: [loanApplicationId], references: [id], onDelete: SetNull)
+model Uld {
+  id                       String    @id @default(cuid())
+  serialNumber             String    @unique
+  flightId                 String?
+  shipmentId               String?
+  locationCode             String?
+  latitude                 Float?
+  longitude                Float?
+  complianceStatus         String    @default("OK")
+  exposureUsedMinutes      Int       @default(0)
+  exposureRemainingMinutes Int       @default(0)
+  riskLevel                RiskLevel @default(LOW)
+  riskScore                Float     @default(0)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  flight                   Flight?   @relation(fields: [flightId], references: [id], onDelete: SetNull)
+  shipment                 Shipment? @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  pieces                   Piece[]
 
-  @@index([userId, type, status])
+  @@index([locationCode])
+  @@index([riskLevel])
 }
 
-model RiskAssessment {
-  id            String       @id @default(cuid())
-  userId        String
-  duplicateCheck Boolean
-  fraudFlag     Boolean
-  score         Int
-  reviewStatus  ReviewStatus
-  notes         Json?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Piece {
+  id                          String         @id
+  shipmentId                  String
+  waybillId                   String?
+  uldId                       String?
+  description                 String?
+  skeleton                    Boolean        @default(false)
+  specialHandlingCodes        String[]
+  lengthCm                    Float?
+  widthCm                     Float?
+  heightCm                    Float?
+  volumeCm3                   Float?
+  dimensionalWeightKg         Float?
+  volumetricScore             Float?
+  densityScore                Float?
+  stackability                Float?
+  thermalExposureSurfaceArea  Float?
+  fragilityRisk               Float?
+  currentZone                 String?
+  currentStatus               String?
+  handlerChain                String[]
+  customsStatus               String?
+  chainOfCustodyScore         Float          @default(1)
+  thermalScore                Float          @default(0)
+  integrityScore              Float          @default(1)
+  theftRiskScore              Float          @default(0)
+  metadata                    Json?
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+  shipment                    Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  waybill                     Waybill?       @relation(fields: [waybillId], references: [id], onDelete: SetNull)
+  uld                         Uld?           @relation(fields: [uldId], references: [id], onDelete: SetNull)
+  events                      Event[]
+  sensorStates                SensorState[]
+  custodyStates               CustodyState[]
+  thermalStates               ThermalState[]
+  riskStates                  RiskState[]
+  alerts                      Alert[]
+  interventions               Intervention[]
 
-  @@index([userId, reviewStatus])
+  @@index([shipmentId])
+  @@index([currentZone])
 }
 
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  tokenId   String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Event {
+  id          String    @id @default(cuid())
+  shipmentId  String
+  pieceId     String?
+  occurredAt  DateTime
+  type        EventType
+  location    String?
+  zone        String?
+  handler     String?
+  message     String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  shipment    Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  piece       Piece?    @relation(fields: [pieceId], references: [id], onDelete: SetNull)
+
+  @@index([shipmentId, occurredAt])
+  @@index([pieceId, occurredAt])
 }
 
+model SensorState {
+  id               String   @id @default(cuid())
+  pieceId          String
+  measuredAt       DateTime
+  internalTempC    Float?
+  externalTempC    Float?
+  humidity         Float?
+  exposureMinutes  Int      @default(0)
+  sunlight         String?
+  tiltDegrees      Float?
+  source           String
+  metadata         Json?
+  createdAt        DateTime @default(now())
+  piece            Piece     @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([pieceId, measuredAt])
+}
+
+model CustodyState {
+  id                  String   @id @default(cuid())
+  pieceId             String
+  recordedAt          DateTime
+  fromZone            String?
+  toZone              String?
+  handler             String?
+  verifiedBy          String?
+  status              String
+  outOfChainMinutes   Int      @default(0)
+  tamperProbability   Float    @default(0)
+  reloadMatchScore    Float    @default(1)
+  identityConfidence  Float    @default(1)
+  metadata            Json?
+  createdAt           DateTime @default(now())
+  piece               Piece     @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([pieceId, recordedAt])
+}
+
+model ThermalState {
+  id                       String    @id @default(cuid())
+  pieceId                  String
+  recordedAt               DateTime
+  status                   String
+  temperatureC             Float?
+  ambientTemperatureC      Float?
+  exposureUsedMinutes      Int       @default(0)
+  exposureRemainingMinutes Int       @default(0)
+  predictedBreachMinutes   Int?
+  riskLevel                RiskLevel @default(LOW)
+  metadata                 Json?
+  createdAt                DateTime  @default(now())
+  piece                    Piece     @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([pieceId, recordedAt])
+}
+
+model RiskState {
+  id                    String    @id @default(cuid())
+  shipmentId            String?
+  pieceId               String?
+  calculatedAt          DateTime
+  riskScore             Float
+  riskLevel             RiskLevel
+  predictedBreachMin    Int?
+  delayPredictionMin    Int?
+  theftRiskScore        Float      @default(0)
+  integrityScore        Float      @default(1)
+  customsRiskScore      Float      @default(0)
+  flags                 String[]
+  metadata              Json?
+  createdAt             DateTime   @default(now())
+  shipment              Shipment?  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  piece                 Piece?     @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId, calculatedAt])
+  @@index([pieceId, calculatedAt])
+}
+
+model Alert {
+  id           String        @id @default(cuid())
+  shipmentId   String?
+  pieceId      String?
+  type         String
+  severity     AlertSeverity
+  status       AlertStatus   @default(OPEN)
+  title        String
+  description  String
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  acknowledgedAt DateTime?
+  resolvedAt   DateTime?
+  shipment     Shipment?     @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  piece        Piece?        @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+  interventions Intervention[]
+
+  @@index([status, severity])
+}
+
+model Intervention {
+  id                 String             @id @default(cuid())
+  alertId            String?
+  shipmentId         String?
+  pieceId            String?
+  action             String
+  assignedRole       String
+  slaDeadline        DateTime
+  priority           AlertSeverity
+  status             InterventionStatus @default(OPEN)
+  assignee           String?
+  verificationNotes  String?
+  metadata           Json?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  alert              Alert?            @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  shipment           Shipment?         @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  piece              Piece?            @relation(fields: [pieceId], references: [id], onDelete: Cascade)
+
+  @@index([status, priority])
+}
+
+model AuditLog {
+  id             String     @id @default(cuid())
+  entityType     String
+  entityId       String
+  loggedAt       DateTime   @default(now())
+  redisState     Json?
+  oneRecordState Json?
+  driftDetected  Boolean    @default(false)
+  actionTaken    String
+  details        Json?
+  syncStatus     SyncStatus @default(PENDING)
+
+  @@index([entityType, entityId, loggedAt])
+}

@@ -6,6 +6,14 @@
     "module": "CommonJS",
     "typeRoots": ["./src/types", "../../node_modules/@types"]
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/index.ts",
+    "src/server.ts",
+    "src/app.ts",
+    "src/config/**/*.ts",
+    "src/lib/**/*.ts",
+    "src/middleware/**/*.ts",
+    "src/aero/**/*.ts",
+    "src/types/**/*.d.ts"
+  ]
 }
-

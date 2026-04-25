@@ -1,0 +1,17 @@
+[Unit]
+Description=CryptoVault Worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/home/elon/Desktop/bot
+Environment=NODE_ENV=production
+EnvironmentFile=/home/elon/Desktop/bot/.env
+ExecStart=/usr/bin/node /home/elon/Desktop/bot/apps/api/dist/worker-process.js
+Restart=always
+RestartSec=5
+LimitNOFILE=10000
+
+[Install]
+WantedBy=multi-user.target

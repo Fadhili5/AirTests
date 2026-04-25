@@ -2,74 +2,72 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, FileText, HandCoins, Landmark, ShieldCheck } from "lucide-react";
-import { formatKes } from "@lending/shared";
-import { useApp } from "../providers/app-provider";
-import { StatusChip } from "./status-chip";
-import { LoadingScreen } from "./loading-screen";
+import { Radar, Plane, PackageSearch, Thermometer, Siren, ShieldCheck, CloudSun } from "lucide-react";
 
-const navItems = [
-  { href: "/", label: "Home", icon: Landmark },
-  { href: "/wallet", label: "Wallet", icon: HandCoins },
-  { href: "/apply", label: "Apply", icon: FileText },
-  { href: "/repayment", label: "Repay", icon: CreditCard },
-  { href: "/support", label: "Support", icon: ShieldCheck }
+const navigation = [
+  { href: "/dashboard", label: "Dashboard", icon: Radar },
+  { href: "/flights", label: "Flights", icon: Plane },
+  { href: "/uld-tracking", label: "ULD Tracking", icon: PackageSearch },
+  { href: "/exposure", label: "Exposure", icon: Thermometer },
+  { href: "/interventions", label: "Interventions", icon: ShieldCheck },
+  { href: "/alerts", label: "Alerts", icon: Siren },
+  { href: "/weather", label: "Weather", icon: CloudSun },
+  { href: "/thermal-map", label: "Thermal Map", icon: Thermometer }
 ];
 
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { dashboard, loading, authError } = useApp();
-
-  if (loading) {
-    return <LoadingScreen message="Securing your Telegram session and loading account data." />;
-  }
-
-  if (authError) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <div className="max-w-md rounded-[28px] border border-orange-200 bg-white px-6 py-8 text-center shadow-glow">
-          <p className="text-lg font-semibold text-ink">Unable to open your Mini App session</p>
-          <p className="mt-3 text-sm text-slate-600">{authError}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 pb-24 pt-6">
-      <div className="rounded-[34px] bg-[radial-gradient(circle_at_top_left,_rgba(110,231,183,0.3),_transparent_38%),linear-gradient(135deg,#0f766e_0%,#164e63_100%)] p-6 text-white shadow-glow">
-        <p className="text-[11px] uppercase tracking-[0.32em] text-white/70">Kenya Digital Lending</p>
-        <div className="mt-4 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold">{dashboard?.user.fullName ?? "Telegram Customer"}</h1>
-            <p className="mt-2 text-sm text-white/80">
-              Wallet {formatKes(dashboard?.wallet?.refundableAmount ?? 0)} available for withdrawal
-            </p>
+    <div className="min-h-screen bg-[var(--bg)]">
+      <div className="mx-auto grid min-h-screen max-w-[1700px] grid-cols-1 gap-3 px-3 py-3 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="panel-strong h-fit overflow-hidden lg:sticky lg:top-3">
+          <div className="border-b px-3 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">AeroSentinel</p>
+            <h1 className="mt-1 text-[16px] font-semibold text-slate-900">Cargo Operations</h1>
+            <p className="mt-1 text-[11px] text-slate-500">Air cargo control tower</p>
           </div>
-          <StatusChip status={dashboard?.latestApplication?.status ?? dashboard?.user.verificationStatus ?? "PENDING"} />
-        </div>
+
+          <nav className="space-y-0.5 p-2">
+            {navigation.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || (href === "/dashboard" && pathname === "/control-tower");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-[12px] transition ${
+                    active
+                      ? "bg-slate-100 font-medium text-slate-900"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <main className="space-y-4">
+          <header className="panel flex min-h-[48px] items-center justify-between gap-4 px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Operations Console</p>
+                <h2 className="text-[15px] font-semibold text-slate-900">
+                  {navigation.find((item) => pathname === item.href)?.label ?? "Dashboard"}
+                </h2>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <span className="status-pill status-live">Live</span>
+              <span>Flight, telemetry, weather, intervention data</span>
+            </div>
+          </header>
+
+          {children}
+        </main>
       </div>
-
-      <main className="mt-6 space-y-5">{children}</main>
-
-      <nav className="fixed bottom-4 left-1/2 z-20 flex w-[min(92vw,720px)] -translate-x-1/2 justify-between rounded-full border border-white/70 bg-white/90 px-3 py-2 shadow-glow backdrop-blur">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex flex-1 flex-col items-center rounded-full px-3 py-2 text-xs font-medium ${
-                active ? "bg-lagoon text-white" : "text-slate-500"
-              }`}
-            >
-              <Icon className="mb-1 h-4 w-4" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
     </div>
   );
 };
-

@@ -1,30 +1,18 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "../providers/app-provider";
-
-const bodyFont = Manrope({
-  subsets: ["latin"],
-  variable: "--font-body"
-});
-
-const displayFont = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display"
-});
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
-  title: "KopaBot Mini App",
-  description: "Telegram Mini App for digital lending, wallet verification, and repayment management."
+  title: "AeroSentinel",
+  description: "Real-Time Air Cargo Exposure Intelligence and ONE Record Digital Twin Platform"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
-        <AppProvider>{children}</AppProvider>
+    <html lang="en" className="h-full bg-[var(--bg)]">
+      <body className="min-h-full bg-[var(--bg)] text-slate-900 antialiased">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
 }
-

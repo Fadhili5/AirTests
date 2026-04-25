@@ -4,43 +4,205 @@
 
 :root {
   color-scheme: light;
+  --bg: #f7f9fc;
+  --panel: #ffffff;
+  --panel-muted: #f8fbff;
+  --line: #d9e2ec;
+  --line-strong: #bcccdc;
+  --text: #102a43;
+  --muted: #627d98;
+  --blue: #1f5f8b;
+  --blue-soft: #d9eaf7;
+  --success: #2f855a;
+  --warning: #b7791f;
+  --critical: #c53030;
 }
 
-html {
-  font-family: var(--font-body), sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(110, 231, 183, 0.35), transparent 32%),
-    linear-gradient(180deg, #f5efe1 0%, #f8f4eb 100%);
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--bg);
 }
 
 body {
-  min-height: 100vh;
-  color: #0f172a;
+  color: var(--text);
+  font-family:
+    "Segoe UI",
+    "IBM Plex Sans",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display), sans-serif;
+* {
+  box-sizing: border-box;
+  border-color: var(--line);
 }
 
-input,
-select,
-button,
-textarea {
-  font: inherit;
+::selection {
+  background: #bfdbfe;
+  color: #0b2239;
+}
+
+.panel {
+  @apply border;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 1px 2px rgba(16, 42, 67, 0.06);
+}
+
+.panel-strong {
+  @apply border;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(16, 42, 67, 0.08);
+}
+
+.panel-header {
+  @apply flex items-center justify-between border-b px-3 py-2;
+  border-color: var(--line);
+}
+
+.panel-body {
+  @apply p-3;
+}
+
+.ops-title {
+  @apply text-[12px] font-semibold uppercase tracking-[0.14em];
+  color: var(--muted);
+}
+
+.ops-value {
+  @apply text-[20px] font-semibold leading-none;
+  color: var(--text);
+}
+
+.status-pill {
+  @apply inline-flex items-center gap-1 border px-2 py-0.5 text-[11px] font-medium;
+  border-radius: 999px;
+}
+
+.status-live {
+  border-color: #9ae6b4;
+  background: #f0fff4;
+  color: var(--success);
+}
+
+.status-ok {
+  border-color: #9ae6b4;
+  background: #f0fff4;
+  color: var(--success);
+}
+
+.status-warn {
+  border-color: #fbd38d;
+  background: #fffaf0;
+  color: var(--warning);
+}
+
+.status-critical {
+  border-color: #feb2b2;
+  background: #fff5f5;
+  color: var(--critical);
+}
+
+.toolbar {
+  @apply flex flex-wrap items-center gap-2 border-b px-3 py-2;
+  border-color: var(--line);
+  background: #fbfdff;
 }
 
 .field {
-  @apply w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-lagoon focus:ring-2 focus:ring-lagoon/15;
+  @apply border bg-white px-2.5 py-1.5 text-[12px] outline-none;
+  border-radius: 6px;
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.field:focus {
+  border-color: #90cdf4;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.12);
 }
 
 .button-primary {
-  @apply inline-flex w-full items-center justify-center rounded-2xl bg-lagoon px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center border px-3 py-1.5 text-[12px] font-medium text-white;
+  border-radius: 6px;
+  border-color: var(--blue);
+  background: var(--blue);
 }
 
 .button-secondary {
-  @apply inline-flex w-full items-center justify-center rounded-2xl border border-lagoon/20 bg-white px-4 py-3 text-sm font-semibold text-lagoon transition hover:border-lagoon/40 hover:bg-lagoon/5;
+  @apply inline-flex items-center justify-center border px-3 py-1.5 text-[12px] font-medium;
+  border-radius: 6px;
+  border-color: var(--line-strong);
+  background: #fff;
+  color: var(--text);
 }
 
+.ops-table {
+  @apply w-full border-collapse text-[12px];
+}
+
+.ops-table thead th {
+  @apply border-b px-3 py-2 text-left font-semibold;
+  border-color: var(--line);
+  color: var(--muted);
+  background: #fbfdff;
+}
+
+.ops-table tbody td {
+  @apply border-b px-3 py-2 align-middle;
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.ops-table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.ops-metric-grid {
+  @apply grid gap-3 md:grid-cols-2 xl:grid-cols-4;
+}
+
+.ops-metric {
+  @apply border px-3 py-3;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.ops-map {
+  @apply border;
+  border-radius: 8px;
+  background: #eef4fa;
+}
+
+.split-grid {
+  @apply grid gap-3 xl:grid-cols-[300px_minmax(0,1fr)_340px];
+}
+
+.bottom-grid {
+  @apply grid gap-3 xl:grid-cols-[1.15fr_0.85fr];
+}
+
+.ribbon {
+  @apply inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em];
+  border-radius: 4px;
+}
+
+.ribbon-blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.ribbon-warn {
+  background: #fff7e6;
+  color: var(--warning);
+}
+
+.ribbon-critical {
+  background: #fff1f1;
+  color: var(--critical);
+}
